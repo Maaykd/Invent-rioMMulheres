@@ -29,32 +29,51 @@ const App = (function() {
     /**
      * Inicializa a aplicação
      */
-    function inicializar() {
-        try {
-            console.log('[App] Inicializando sistema...');
+    async function inicializar() {
+    try {
+        console.log('[App] Inicializando sistema...');
 
-            // Inicializa módulo de dados
-            Inventario.inicializar();
+        // 1. Verificar se já existe inventário salvo no localStorage
+        const inventario = Storage.carregarInventario();
 
-            // Configura UI
-            UI.atualizarEstatisticas();
-            UI.renderizarHistorico();
-            UI.configurarScrollTop();
+        if (!inventario || inventario.length === 0) {
+            console.log("[App] Nenhum inventário encontrado. Importando backup interno...");
 
-            // Setup de eventos
-            _setupTabs();
-            _setupScanner();
-            _setupUpload();
-            _setupBuscas();
-            _setupCoordenacao();
-            _setupBackup();
+            // 2. Ler o backup embarcado (UTF-8 seguro)
+            const resposta = await fetch("data/backup.json");
+            const texto = await resposta.text();
+            const backup = JSON.parse(texto);
 
-            console.log('[App] ✅ Sistema inicializado!');
-        } catch (e) {
-            console.error('[App] ❌ Erro na inicialização:', e);
-            alert('Erro ao inicializar o sistema. Verifique o console (F12) para detalhes.');
+            // 3. Restaurar usando o método oficial
+            Storage.importarBackup(backup);
+
+            console.log("[App] Backup importado com sucesso!");
+        } else {
+            console.log("[App] Inventário já existente. Ignorando backup interno.");
         }
+
+        // 4. Inicialização normal do sistema (seu código original)
+        Inventario.inicializar();
+
+        UI.atualizarEstatisticas();
+        UI.renderizarHistorico();
+        UI.configurarScrollTop();
+
+        _setupTabs();
+        _setupScanner();
+        _setupUpload();
+        _setupBuscas();
+        _setupCoordenacao();
+        _setupBackup();
+
+        console.log('[App] ✅ Sistema inicializado!');
+
+    } catch (e) {
+        console.error('[App] ❌ Erro na inicialização:', e);
+        alert('Erro ao inicializar o sistema. Verifique o console (F12) para detalhes.');
     }
+}
+
 
     // ==================== TABS ====================
 
