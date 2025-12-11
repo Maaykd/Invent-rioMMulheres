@@ -21,9 +21,10 @@ jobs:
         run: |
           npm install
           npm install @capacitor/core @capacitor/cli @capacitor/android
+          chmod +x node_modules/.bin/*
           
       - name: Sync Capacitor
-        run: npx cap sync android
+        run: npm exec cap sync android
         
       - name: Setup Java
         uses: actions/setup-java@v4
