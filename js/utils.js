@@ -156,6 +156,26 @@ const Utils = (function() {
     }
 
     /**
+     * Normaliza número de patrimônio para comparação
+     * Remove zeros à esquerda e converte para uppercase
+     * Ex: "0123456" -> "123456", "00007890" -> "7890"
+     * @param {string} patrimonio - Número do patrimônio
+     * @returns {string} Patrimônio normalizado
+     */
+    function normalizarPatrimonio(patrimonio) {
+        if (!patrimonio) return '';
+        let limpo = patrimonio.toString().trim().toUpperCase();
+        
+        // Remove zeros à esquerda apenas se for numérico
+        // Mantém pelo menos 1 caractere (caso seja só zeros)
+        if (/^\d+$/.test(limpo)) {
+            limpo = limpo.replace(/^0+/, '') || '0';
+        }
+        
+        return limpo;
+    }
+
+    /**
      * Formata valor monetário
      * @param {number|string} valor - Valor a formatar
      * @returns {string} Valor formatado em BRL
@@ -181,6 +201,7 @@ const Utils = (function() {
         normalizar,
         gerarId,
         validarPatrimonio,
+        normalizarPatrimonio,
         formatarMoeda
     };
 })();

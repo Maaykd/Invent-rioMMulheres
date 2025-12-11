@@ -133,7 +133,7 @@ const App = (function() {
 
     /**
      * Alterna modo do scanner
-     * @param {string} modo - 'manual' ou 'camera'
+     * @param {string} modo - 'manual', 'camera' ou 'lote'
      */
     function setModoScanner(modo) {
         _modoScanner = modo;
@@ -146,15 +146,24 @@ const App = (function() {
         // Alterna seções
         const secaoManual = document.getElementById('section-manual');
         const secaoCamera = document.getElementById('section-camera');
+        const secaoLote = document.getElementById('section-lote');
 
         if (secaoManual) secaoManual.style.display = modo === 'manual' ? 'block' : 'none';
         if (secaoCamera) secaoCamera.classList.toggle('active', modo === 'camera');
+        if (secaoLote) secaoLote.style.display = modo === 'lote' ? 'block' : 'none';
 
-        // Para câmera se mudou para manual
-        if (modo === 'manual') {
+        // Para câmera se mudou para outro modo
+        if (modo !== 'camera') {
             Camera.parar();
+        }
+        
+        // Foca no input correto
+        if (modo === 'manual') {
             const input = document.getElementById('input-patrimonio');
             if (input) input.focus();
+        } else if (modo === 'lote') {
+            const textarea = document.getElementById('input-lote');
+            if (textarea) textarea.focus();
         }
     }
 
@@ -229,6 +238,147 @@ const App = (function() {
         Camera.parar();
     }
 
+    // ==================== PROCESSAMENTO EM LOTE ====================
+
+    /**
+     * Processa lista de patrimônios em lote
+     */
+    function processarLote() {
+        const textarea = document.getElementById('input-lote');
+        if (!textarea) return;
+
+        const texto = textarea.value.trim();
+        if (!texto) {
+            UI.toast('Cole uma lista de patrimônios', 'warning');
+            return;
+        }
+
+        // Extrai patrimônios (aceita vírgula, ponto-vírgula, tab, quebra de linha)
+        const patrimonios = texto
+            .split(/[,;\t\n\r]+/)
+            .map(p => p.trim())
+            .filter(p => p.length > 0);
+
+        // Remove duplicatas mantendo ordem
+        const unicos = [...new Set(patrimonios)];
+
+        if (unicos.length === 0) {
+            UI.toast('Nenhum patrimônio válido encontrado', 'warning');
+            return;
+        }
+
+        // Contadores
+        let sucesso = 0;
+        let jaBipado = 0;
+        let naoEncontrado = 0;
+        const detalhes = {
+            sucesso: [],
+            jaBipado: [],
+            naoEncontrado: []
+        };
+
+        // Processa cada patrimônio
+        for (const patrimonio of unicos) {
+            if (!Utils.validarPatrimonio(patrimonio)) {
+                naoEncontrado++;
+                detalhes.naoEncontrado.push(patrimonio);
+                continue;
+            }
+
+            const resultado = Inventario.registrarBipagem(patrimonio);
+
+            switch (resultado.status) {
+                case 'sucesso':
+                    sucesso++;
+                    detalhes.sucesso.push(patrimonio);
+                    Inventario.adicionarHistorico(resultado);
+                    break;
+                case 'ja_bipado':
+                    jaBipado++;
+                    detalhes.jaBipado.push(patrimonio);
+                    break;
+                default:
+                    naoEncontrado++;
+                    detalhes.naoEncontrado.push(patrimonio);
+            }
+        }
+
+        // Mostra resultado
+        _mostrarResultadoLote(sucesso, jaBipado, naoEncontrado, detalhes);
+
+        // Atualiza UI
+        UI.atualizarEstatisticas();
+        UI.renderizarHistorico();
+
+        // Feedback
+        if (sucesso > 0) {
+            Utils.tocarSom('sucesso');
+            UI.toast(`${sucesso} patrimônio(s) registrado(s)!`, 'success');
+        } else if (jaBipado > 0 && naoEncontrado === 0) {
+            Utils.tocarSom('alerta');
+            UI.toast('Todos já estavam bipados', 'warning');
+        } else {
+            Utils.tocarSom('erro');
+            UI.toast('Nenhum patrimônio novo registrado', 'error');
+        }
+    }
+
+    /**
+     * Mostra resultado do processamento em lote na interface
+     */
+    function _mostrarResultadoLote(sucesso, jaBipado, naoEncontrado, detalhes) {
+        const container = document.getElementById('lote-resultado');
+        if (!container) return;
+
+        // Atualiza números
+        document.getElementById('lote-sucesso').textContent = sucesso;
+        document.getElementById('lote-ja-bipado').textContent = jaBipado;
+        document.getElementById('lote-nao-encontrado').textContent = naoEncontrado;
+
+        // Monta detalhes
+        let html = '';
+        
+        if (detalhes.naoEncontrado.length > 0) {
+            html += `<div class="detalhe-grupo erro">
+                <strong>❌ Não encontrados (${detalhes.naoEncontrado.length}):</strong>
+                <div class="lista-patrimonios">${detalhes.naoEncontrado.join(', ')}</div>
+            </div>`;
+        }
+        
+        if (detalhes.jaBipado.length > 0) {
+            html += `<div class="detalhe-grupo alerta">
+                <strong>⚠️ Já bipados (${detalhes.jaBipado.length}):</strong>
+                <div class="lista-patrimonios">${detalhes.jaBipado.join(', ')}</div>
+            </div>`;
+        }
+        
+        if (detalhes.sucesso.length > 0) {
+            html += `<div class="detalhe-grupo sucesso">
+                <strong>✅ Registrados (${detalhes.sucesso.length}):</strong>
+                <div class="lista-patrimonios">${detalhes.sucesso.join(', ')}</div>
+            </div>`;
+        }
+
+        document.getElementById('lote-detalhes').innerHTML = html;
+        container.style.display = 'block';
+    }
+
+    /**
+     * Limpa textarea e resultado do lote
+     */
+    function limparLote() {
+        const textarea = document.getElementById('input-lote');
+        if (textarea) {
+            textarea.value = '';
+            textarea.focus();
+        }
+
+        const resultado = document.getElementById('lote-resultado');
+        if (resultado) {
+            resultado.style.display = 'none';
+        }
+    }
+
     // ==================== UPLOAD CSV ====================
 
     /**
@@ -264,76 +414,76 @@ const App = (function() {
         });
 
         // Seleção de arquivo
-        input.addEventListener('change', () => {
-            if (input.files.length > 0) {
-                _processarUpload(input.files[0]);
+        input.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                _processarUpload(e.target.files[0]);
             }
         });
     }
 
     /**
-     * Processa arquivo de upload
+     * Processa arquivo CSV enviado
      */
     async function _processarUpload(arquivo) {
         const statusEl = document.getElementById('import-status');
-
-        UI.mostrarLoader('Processando arquivo CSV...');
-
+        
         try {
-            const resultado = await CSV.processarArquivo(arquivo);
-
-            if (resultado.erros.length > 0 && resultado.dados.length === 0) {
-                throw new Error(resultado.erros.join('\n'));
+            if (statusEl) {
+                statusEl.innerHTML = '<div class="info-box">⏳ Processando arquivo...</div>';
             }
 
-            // Importa dados
-            const stats = Inventario.importar(resultado.dados);
-
-            // Feedback
-            UI.esconderLoader();
-
-            let html = `
-                <div class="info-box" style="background: var(--cor-sucesso-fundo); border-left-color: var(--cor-sucesso);">
-                    <strong>✅ Importação concluída!</strong><br>
-                    <br>
-                    📊 <strong>${stats.total}</strong> itens importados<br>
-                    ✅ <strong>${stats.localizados}</strong> já localizados (UORG preenchido)<br>
-                    ⏳ <strong>${stats.pendentes}</strong> pendentes de localização
-                </div>
-            `;
+            const resultado = await CSV.processarArquivo(arquivo);
 
             if (resultado.erros.length > 0) {
-                html += `
-                    <div class="info-box" style="background: var(--cor-alerta-fundo); border-left-color: var(--cor-alerta); margin-top: 1rem;">
-                        <strong>⚠️ Avisos (${resultado.erros.length}):</strong><br>
-                        <small>${resultado.erros.slice(0, 5).join('<br>')}</small>
-                        ${resultado.erros.length > 5 ? `<br><small>... e mais ${resultado.erros.length - 5} avisos</small>` : ''}
+                console.warn('[App] Avisos na importação:', resultado.erros);
+            }
+
+            if (resultado.dados.length === 0) {
+                throw new Error('Nenhum dado válido encontrado no arquivo');
+            }
+
+            // Importa para o inventário
+            const stats = Inventario.importar(resultado.dados);
+
+            // Atualiza UI
+            UI.atualizarEstatisticas();
+
+            // Mostra resultado
+            if (statusEl) {
+                statusEl.innerHTML = `
+                    <div class="info-box" style="background: #d4edda; border-color: #28a745;">
+                        ✅ <strong>Importação concluída!</strong><br>
+                        📦 Total: ${stats.total} itens<br>
+                        ✅ Localizados: ${stats.localizados}<br>
+                        ⏳ Pendentes: ${stats.pendentes}
+                        ${resultado.erros.length > 0 ? `<br><br>⚠️ ${resultado.erros.length} aviso(s)` : ''}
                     </div>
                 `;
             }
 
-            if (statusEl) statusEl.innerHTML = html;
+            UI.toast('Inventário importado com sucesso!', 'success');
 
-            UI.atualizarEstatisticas();
-            UI.toast(`${stats.total} itens importados!`, 'success');
-
-        } catch (erro) {
-            UI.esconderLoader();
+        } catch (e) {
+            console.error('[App] Erro no upload:', e);
             
             if (statusEl) {
                 statusEl.innerHTML = `
-                    <div class="info-box" style="background: var(--cor-erro-fundo); border-left-color: var(--cor-erro);">
-                        <strong>❌ Erro na importação</strong><br>
-                        ${Utils.sanitizar(erro.message)}
+                    <div class="info-box" style="background: #f8d7da; border-color: #dc3545;">
+                        ❌ <strong>Erro na importação</strong><br>
+                        ${e.message}
                     </div>
                 `;
             }
 
             UI.toast('Erro ao importar arquivo', 'error');
         }
+
+        // Limpa input
+        const input = document.getElementById('arquivo-csv');
+        if (input) input.value = '';
     }
 
-    // ==================== BUSCAS COM DEBOUNCE ====================
+    // ==================== BUSCAS ====================
 
     /**
      * Configura campos de busca com debounce
@@ -562,6 +712,10 @@ const App = (function() {
         iniciarCamera,
         pararCamera,
         
+        // Lote
+        processarLote,
+        limparLote,
+        
         // Exportação
         exportarCSV,
         exportarPorCoordenacao,
@@ -588,11 +742,12 @@ const App = (function() {
 window.App = App;
 
 // Aliases para compatibilidade com onclick no HTML
-// Usamos funções wrapper para garantir que App existe quando chamadas
 window.setMode = function(modo) { App.setModoScanner(modo); };
 window.verificarPatrimonio = function() { App.verificarPatrimonio(); };
 window.iniciarCamera = function() { App.iniciarCamera(); };
 window.pararCamera = function() { App.pararCamera(); };
+window.processarLote = function() { App.processarLote(); };
+window.limparLote = function() { App.limparLote(); };
 window.exportarCSV = function(tipo) { App.exportarCSV(tipo); };
 window.exportarPorCoordenacao = function() { App.exportarPorCoordenacao(); };
 window.exportarBackup = function() { App.exportarBackup(); };

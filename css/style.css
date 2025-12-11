@@ -1288,3 +1288,128 @@ select:focus {
         gap: 0.5rem;
     }
 }
+
+/* ==================== BIPAGEM EM LOTE ==================== */
+
+.lote-section {
+    padding: 1rem 0;
+}
+
+.lote-section textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 200px;
+    transition: border-color 0.2s;
+}
+
+.lote-section textarea:focus {
+    outline: none;
+    border-color: #7B1E6A;
+}
+
+.lote-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.lote-actions .btn {
+    flex: 1;
+    min-width: 150px;
+}
+
+/* Resultado do Lote */
+.lote-resultado {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.lote-resultado h4 {
+    margin: 0 0 1rem 0;
+    color: #333;
+}
+
+.lote-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.lote-stat {
+    flex: 1;
+    min-width: 100px;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.lote-stat .numero {
+    display: block;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.lote-stat .label {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.lote-stat.sucesso {
+    background: #d4edda;
+    color: #155724;
+}
+
+.lote-stat.ja-bipado {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.lote-stat.erro {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.lote-detalhes {
+    margin-top: 1rem;
+}
+
+.detalhe-grupo {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.detalhe-grupo.sucesso {
+    background: #d4edda;
+    border-left: 4px solid #28a745;
+}
+
+.detalhe-grupo.alerta {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.detalhe-grupo.erro {
+    background: #f8d7da;
+    border-left: 4px solid #dc3545;
+}
+
+.lista-patrimonios {
+    margin-top: 0.5rem;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.85rem;
+    word-break: break-all;
+    max-height: 100px;
+    overflow-y: auto;
+}

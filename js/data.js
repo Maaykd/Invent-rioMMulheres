@@ -80,10 +80,11 @@ const Inventario = (function() {
 
         // Reconstrói em uma única passagem
         for (const item of _itens) {
-            const patrimonioUpper = (item.patrimonio || '').toUpperCase();
+            // Normaliza patrimônio para índice (remove zeros à esquerda)
+            const patrimonioNormalizado = Utils.normalizarPatrimonio(item.patrimonio);
             
-            // Índice por patrimônio
-            _indexPatrimonio.set(patrimonioUpper, item);
+            // Índice por patrimônio (usa versão normalizada como chave)
+            _indexPatrimonio.set(patrimonioNormalizado, item);
             
             // Índice por coordenação destino
             const coord = (item.coordenacao_destino || '').trim();
@@ -166,7 +167,8 @@ const Inventario = (function() {
      */
     function buscarPorPatrimonio(patrimonio) {
         if (!patrimonio) return null;
-        const key = patrimonio.toString().trim().toUpperCase();
+        // Normaliza para comparação (remove zeros à esquerda)
+        const key = Utils.normalizarPatrimonio(patrimonio);
         return _indexPatrimonio.get(key) || null;
     }
 
