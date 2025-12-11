@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de Inventário Patrimonial - Ministério das Mulheres">
+    <meta name="theme-color" content="#7B1E6A">
+    <title>Sistema de Inventário Patrimonial</title>
+    
+    <!-- Biblioteca QuaggaJS para leitura de código de barras -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    
+    <!-- Estilos -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header institucional -->
+    <header class="header">
+        <h1>📋 Sistema de Inventário Patrimonial - MMulheres</h1>
+        <small>Ministério das Mulheres • Controle de Patrimônio - Feito por Maycon Douglas</small>
+    </header>
+
+    <main class="container">
+        <!-- Cards de Estatísticas -->
+        <section class="stats">
+            <div class="stat-card">
+                <div class="label">Total de Itens</div>
+                <div class="value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card localizados">
+                <div class="label">Localizados</div>
+                <div class="value" id="stat-localizados">0</div>
+            </div>
+            <div class="stat-card pendentes">
+                <div class="label">Pendentes</div>
+                <div class="value" id="stat-pendentes">0</div>
+            </div>
+            <div class="stat-card bipados">
+                <div class="label">Bipados</div>
+                <div class="value" id="stat-bipados">0</div>
+            </div>
+        </section>
+
+        <!-- Barra de Progresso -->
+        <section class="progress-container">
+            <div class="progress-header">
+                <h3>Progresso do Inventário</h3>
+                <span class="percent" id="stat-percentual">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="progress-text">
+                <span><span id="stat-localizados-text">0</span> localizados</span>
+                <span><span id="stat-pendentes-text">0</span> pendentes de <span id="stat-total-text">0</span></span>
+            </div>
+            <div class="progress-legend">
+                <span><span class="legend-dot localizado"></span> Localizados</span>
+                <span><span class="legend-dot pendente"></span> Pendentes</span>
+                <span><span class="legend-dot bipado"></span> Bipados</span>
+            </div>
+        </section>
+
+        <!-- Navegação por Abas -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="scanner">📷 Scanner</button>
+            <button class="tab" data-tab="importar">📁 Importar</button>
+            <button class="tab" data-tab="localizados">
+                ✅ Localizados
+                <span class="badge-count" id="tab-localizados-count">0</span>
+            </button>
+            <button class="tab" data-tab="pendentes">
+                ⏳ Pendentes
+                <span class="badge-count" id="tab-pendentes-count">0</span>
+            </button>
+            <button class="tab" data-tab="bipados">
+                📋 Bipados
+                <span class="badge-count" id="tab-bipados-count">0</span>
+            </button>
+            <button class="tab" data-tab="por-coordenacao">🏢 Por Coordenação</button>
+            <button class="tab" data-tab="config">⚙️ Configurações</button>
+        </nav>
+
+        <!-- ==================== PAINEL: SCANNER ==================== -->
+        <!-- ==================== PAINEL: SCANNER ==================== -->
+<article class="panel active" id="panel-scanner">
+    <h2>📷 Leitura de Patrimônio</h2>
+    
+    <div class="scanner-area">
+        <!-- Seleção de modo -->
+        <div class="scanner-modes">
+            <button class="mode-btn active" id="mode-manual" onclick="setMode('manual')">
+                ⌨️ Digitar/Leitor USB
+            </button>
+            <button class="mode-btn" id="mode-camera" onclick="setMode('camera')">
+                📱 Câmera do Celular
+            </button>
+            <button class="mode-btn" id="mode-lote" onclick="setMode('lote')">
+                📋 Bipar em Lote
+            </button>
+        </div>
+
+        <!-- Entrada Manual -->
+        <section class="input-section" id="section-manual">
+            <div class="input-group">
+                <label for="input-patrimonio">Número do Patrimônio:</label>
+                <div class="input-wrapper">
+                    <input type="text" 
+                           id="input-patrimonio" 
+                           placeholder="Ex: 6644720" 
+                           autocomplete="off"
+                           autofocus>
+                </div>
+            </div>
+            <button class="btn btn-success btn-lg btn-block" onclick="verificarPatrimonio()">
+                ✓ Verificar Patrimônio
+            </button>
+            <p class="shortcut-hint">💡 Pressione <kbd>Enter</kbd> para verificar</p>
+        </section>
+
+        <!-- Câmera -->
+        <section class="camera-section" id="section-camera">
+            <div class="camera-container">
+                <div id="camera-preview"></div>
+                <div class="camera-overlay size-medium" id="camera-overlay"></div>
+            </div>
+            <div class="camera-status" id="camera-status">
+                Clique em "Iniciar Câmera" para começar
+            </div>
+            <div class="camera-controls">
+                <button class="btn btn-success" id="btn-start-camera" onclick="iniciarCamera()">
+                    ▶️ Iniciar Câmera
+                </button>
+                <button class="btn btn-danger" id="btn-stop-camera" onclick="pararCamera()" style="display: none;">
+                    ⏹️ Parar
+                </button>
+                <button class="btn btn-flash" id="btn-flash" onclick="toggleFlash()" style="display: none;">
+                    🔦 Lanterna
+                </button>
+            </div>
+            <div class="camera-advanced-controls" id="camera-advanced" style="display: none;">
+                <div class="control-row">
+                    <label>🔍 Zoom:</label>
+                    <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1" 
+                           oninput="ajustarZoom(this.value)">
+                    <span class="value-display" id="zoom-value">1.0x</span>
+                </div>
+                <div class="control-row">
+                    <label>📐 Área de leitura:</label>
+                    <div class="size-buttons">
+                        <button class="size-btn" onclick="setOverlaySize('small')">Pequena</button>
+                        <button class="size-btn active" onclick="setOverlaySize('medium')">Média</button>
+                        <button class="size-btn" onclick="setOverlaySize('large')">Grande</button>
+                    </div>
+                </div>
+            </div>
+            <div class="info-box">
+                <strong>📱 Dicas para melhor leitura:</strong><br>
+                • Mantenha o código de barras dentro da área marcada<br>
+                • Use boa iluminação ou ative a lanterna<br>
+                • Ajuste o zoom para códigos pequenos<br>
+                • Mantenha o celular estável
+            </div>
+        </section>
+
+        <!-- Bipagem em Lote -->
+        <section class="lote-section" id="section-lote" style="display: none;">
+            <div class="input-group">
+                <label for="input-lote">Cole a lista de patrimônios:</label>
+                <textarea id="input-lote" 
+                          placeholder="Cole aqui os patrimônios...
+
+Aceita:
+- Um por linha
+- Separados por vírgula
+- Colados do Excel
+
+Exemplo:
+6644720
+6644721
+6644722"
+                          rows="10"></textarea>
+            </div>
+            <div class="lote-actions">
+                <button class="btn btn-success btn-lg" onclick="processarLote()">
+                    ✓ Processar Lista
+                </button>
+                <button class="btn btn-outline" onclick="limparLote()">
+                    🗑️ Limpar
+                </button>
+            </div>
+            <div class="info-box">
+                <strong>💡 Dicas:</strong><br>
+                • Copie uma coluna inteira do Excel e cole aqui<br>
+                • Funciona com lista separada por vírgula, ponto-vírgula ou Enter<br>
+                • Duplicatas são ignoradas automaticamente
+            </div>
+            <!-- Resultado do processamento em lote -->
+            <div class="lote-resultado" id="lote-resultado" style="display: none;">
+                <h4>📊 Resultado do Processamento</h4>
+                <div class="lote-stats">
+                    <div class="lote-stat sucesso">
+                        <span class="numero" id="lote-sucesso">0</span>
+                        <span class="label">Bipados</span>
+                    </div>
+                    <div class="lote-stat ja-bipado">
+                        <span class="numero" id="lote-ja-bipado">0</span>
+                        <span class="label">Já bipados</span>
+                    </div>
+                    <div class="lote-stat erro">
+                        <span class="numero" id="lote-nao-encontrado">0</span>
+                        <span class="label">Não encontrados</span>
+                    </div>
+                </div>
+                <div class="lote-detalhes" id="lote-detalhes"></div>
+            </div>
+        </section>
+
+        <!-- Resultado do Scan -->
+        <div class="scan-result" id="scan-result">
+            <div class="icon" id="result-icon"></div>
+            <div class="status" id="result-status"></div>
+            <div class="details" id="result-details"></div>
+        </div>
+
+        <!-- Histórico de Leituras -->
+        <aside class="historico">
+            <h3>🕐 Últimas Leituras</h3>
+            <div id="historico-lista">
+                <p class="empty-state">Nenhuma leitura realizada</p>
+            </div>
+        </aside>
+    </div>
+</article>
+
+        <!-- ==================== PAINEL: IMPORTAR ==================== -->
+        <article class="panel" id="panel-importar">
+            <h2>📁 Importar Inventário</h2>
+            
+            <div class="info-box">
+                <strong>Formato esperado:</strong> Arquivo CSV com colunas: patrimônio, descrição, categoria, valor, 
+                <u>uorg_destino</u>, coordenacao_destino, localidade.<br><br>
+                <strong>Lógica de verificação:</strong><br>
+                • Itens com <strong>UORG Destino preenchido</strong> = Já localizado ✅<br>
+                • Itens com <strong>UORG Destino vazio</strong> = Pendente de localização ⏳
+            </div>
+
+            <div class="upload-area" id="upload-area">
+                <input type="file" id="arquivo-csv" accept=".csv,.txt">
+                <div class="upload-icon">📄</div>
+                <h3>Clique ou arraste um arquivo CSV</h3>
+                <p>Separador: ponto-e-vírgula (;) ou vírgula (,)</p>
+            </div>
+            
+            <div id="import-status"></div>
+        </article>
+
+        <!-- ==================== PAINEL: LOCALIZADOS ==================== -->
+        <article class="panel" id="panel-localizados">
+            <h2>✅ Itens Localizados (com UORG Destino)</h2>
+            
+            <div class="actions">
+                <button class="btn btn-success" onclick="exportarCSV('localizados')">
+                    📥 Exportar CSV
+                </button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" 
+                       id="busca-localizados" 
+                       placeholder="🔍 Buscar por patrimônio ou descrição...">
+            </div>
+            
+            <div class="table-container" style="max-height: 500px; overflow-y: auto;" data-tabela="localizados">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-coluna="patrimonio" onclick="App.ordenarTabela('localizados', 'patrimonio')">
+                                Patrimônio <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="descricao" onclick="App.ordenarTabela('localizados', 'descricao')">
+                                Descrição <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="uorg_destino" onclick="App.ordenarTabela('localizados', 'uorg_destino')">
+                                UORG Destino <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="coordenacao_destino" onclick="App.ordenarTabela('localizados', 'coordenacao_destino')">
+                                Coord. Destino <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="localidade" onclick="App.ordenarTabela('localizados', 'localidade')">
+                                Localidade <span class="sort-icon">↕</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-localizados"></tbody>
+                </table>
+            </div>
+        </article>
+
+        <!-- ==================== PAINEL: PENDENTES ==================== -->
+        <article class="panel" id="panel-pendentes">
+            <h2>⏳ Itens Pendentes (sem UORG Destino)</h2>
+            
+            <div class="actions">
+                <button class="btn btn-success" onclick="exportarCSV('pendentes')">
+                    📥 Exportar CSV
+                </button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" 
+                       id="busca-pendentes" 
+                       placeholder="🔍 Buscar por patrimônio ou descrição...">
+            </div>
+            
+            <div class="table-container" style="max-height: 500px; overflow-y: auto;" data-tabela="pendentes">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-coluna="patrimonio" onclick="App.ordenarTabela('pendentes', 'patrimonio')">
+                                Patrimônio <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="descricao" onclick="App.ordenarTabela('pendentes', 'descricao')">
+                                Descrição <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="categoria" onclick="App.ordenarTabela('pendentes', 'categoria')">
+                                Categoria <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="coordenacao_destino" onclick="App.ordenarTabela('pendentes', 'coordenacao_destino')">
+                                Coord. Destino <span class="sort-icon">↕</span>
+                            </th>
+                            <th>Status Bipagem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-pendentes"></tbody>
+                </table>
+            </div>
+        </article>
+
+        <!-- ==================== PAINEL: BIPADOS ==================== -->
+        <article class="panel" id="panel-bipados">
+            <h2>📋 Itens Bipados (verificados pelo scanner)</h2>
+            
+            <div class="actions">
+                <button class="btn btn-success" onclick="exportarCSV('bipados')">
+                    📥 Exportar CSV
+                </button>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" 
+                       id="busca-bipados" 
+                       placeholder="🔍 Buscar por patrimônio ou descrição...">
+            </div>
+            
+            <div class="table-container" style="max-height: 500px; overflow-y: auto;" data-tabela="bipados">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-coluna="patrimonio" onclick="App.ordenarTabela('bipados', 'patrimonio')">
+                                Patrimônio <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="descricao" onclick="App.ordenarTabela('bipados', 'descricao')">
+                                Descrição <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="uorg_destino" onclick="App.ordenarTabela('bipados', 'uorg_destino')">
+                                UORG Destino <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="coordenacao_destino" onclick="App.ordenarTabela('bipados', 'coordenacao_destino')">
+                                Coord. Destino <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="data_bipagem" onclick="App.ordenarTabela('bipados', 'data_bipagem')">
+                                Data/Hora Bipagem <span class="sort-icon">↕</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-bipados"></tbody>
+                </table>
+            </div>
+        </article>
+
+        <!-- ==================== PAINEL: POR COORDENAÇÃO ==================== -->
+        <article class="panel" id="panel-por-coordenacao">
+            <h2>🏢 Itens por Coordenação Destino</h2>
+
+            <div class="config-section">
+                <h3>Selecione a coordenação destino</h3>
+                <select id="select-coordenacao">
+                    <option value="">-- Escolha uma coordenação destino --</option>
+                </select>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-success" onclick="exportarPorCoordenacao()">
+                    📥 Exportar CSV desta coordenação
+                </button>
+            </div>
+
+            <div class="table-container" style="max-height: 500px; overflow-y: auto;" data-tabela="coordenacao">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-coluna="patrimonio" onclick="App.ordenarTabela('coordenacao', 'patrimonio')">
+                                Patrimônio <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="descricao" onclick="App.ordenarTabela('coordenacao', 'descricao')">
+                                Descrição <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="categoria" onclick="App.ordenarTabela('coordenacao', 'categoria')">
+                                Categoria <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="uorg_destino" onclick="App.ordenarTabela('coordenacao', 'uorg_destino')">
+                                UORG Destino <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="localidade" onclick="App.ordenarTabela('coordenacao', 'localidade')">
+                                Localidade <span class="sort-icon">↕</span>
+                            </th>
+                            <th data-coluna="coordenacao_destino">Coordenação</th>
+                            <th>Status</th>
+                            <th>Data Leitura</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-por-coordenacao"></tbody>
+                </table>
+            </div>
+        </article>
+
+        <!-- ==================== PAINEL: CONFIGURAÇÕES ==================== -->
+        <article class="panel" id="panel-config">
+            <h2>⚙️ Configurações</h2>
+            
+            <!-- Exportar Relatórios -->
+            <section class="config-section">
+                <h3>📥 Exportar Relatórios</h3>
+                <p>Baixe os dados do inventário em formato CSV.</p>
+                <div class="actions">
+                    <button class="btn btn-success" onclick="exportarCSV('completo')">
+                        📊 Inventário Completo
+                    </button>
+                    <button class="btn btn-primary" onclick="exportarCSV('localizados')">
+                        ✅ Localizados
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportarCSV('pendentes')">
+                        ⏳ Pendentes
+                    </button>
+                    <button class="btn btn-action" onclick="exportarCSV('bipados')">
+                        📋 Bipados
+                    </button>
+                </div>
+            </section>
+
+            <!-- Backup e Restauração -->
+            <section class="config-section">
+                <h3>💾 Backup e Restauração</h3>
+                <p>Salve ou restaure todos os dados do sistema (inventário, bipagens e histórico).</p>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="exportarBackup()">
+                        📤 Exportar Backup (JSON)
+                    </button>
+                    <button class="btn btn-outline" onclick="importarBackup()">
+                        📥 Importar Backup
+                    </button>
+                    <input type="file" id="input-restore-backup" accept=".json" style="display: none;">
+                </div>
+            </section>
+
+            <!-- Limpar Bipagens -->
+            <section class="config-section">
+                <h3>🔄 Limpar Bipagens</h3>
+                <p>Remove o registro de bipagens (verificações do scanner), mas mantém o inventário.</p>
+                <button class="btn btn-danger" onclick="limparBipagens()">
+                    🗑️ Limpar Bipagens
+                </button>
+            </section>
+
+            <!-- Resetar Sistema -->
+            <section class="config-section">
+                <h3>⚠️ Resetar Sistema</h3>
+                <p>Remove TODOS os dados (inventário + bipagens). Ação irreversível!</p>
+                <button class="btn btn-danger" onclick="limparTudo()">
+                    💣 Resetar Tudo
+                </button>
+            </section>
+        </article>
+    </main>
+
+    <!-- Toast para notificações -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Scripts modulares -->
+    <script src="js/utils.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/csv.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
