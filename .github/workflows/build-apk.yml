@@ -18,10 +18,12 @@ jobs:
           node-version: '20'
           
       - name: Install dependencies
-        run: npm install
-        
+        run: |
+          npm install
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          
       - name: Sync Capacitor
-        run: node node_modules/@capacitor/cli/bin/cap sync android
+        run: npx cap sync android
         
       - name: Setup Java
         uses: actions/setup-java@v4
