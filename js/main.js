@@ -757,3 +757,129 @@ window.limparTudo = function() { App.limparTudo(); };
 window.ajustarZoom = function(v) { App.ajustarZoom(v); };
 window.toggleFlash = function() { App.toggleFlash(); };
 window.setOverlaySize = function(t) { App.setTamanhoArea(t); };
+
+// ==================== MENU HAMBÚRGUER ====================
+
+let _menuAberto = false;
+
+/**
+ * Toggle do menu lateral
+ */
+function toggleMenu() {
+    if (_menuAberto) {
+        fecharMenu();
+    } else {
+        abrirMenu();
+    }
+}
+
+/**
+ * Abre o menu lateral
+ */
+function abrirMenu() {
+    _menuAberto = true;
+    document.body.classList.add('menu-open');
+    _atualizarMenuStats();
+}
+
+/**
+ * Fecha o menu lateral
+ */
+function fecharMenu() {
+    _menuAberto = false;
+    document.body.classList.remove('menu-open');
+}
+
+/**
+ * Atualiza estatísticas no menu
+ */
+function _atualizarMenuStats() {
+    const stats = Inventario.obterEstatisticas();
+    
+    // Menu stats
+    const menuTotal = document.getElementById('menu-stat-total');
+    const menuLocalizados = document.getElementById('menu-stat-localizados');
+    const menuPendentes = document.getElementById('menu-stat-pendentes');
+    
+    if (menuTotal) menuTotal.textContent = stats.total;
+    if (menuLocalizados) menuLocalizados.textContent = stats.localizados;
+    if (menuPendentes) menuPendentes.textContent = stats.pendentes;
+    
+    // Menu badges
+    const badgeLocalizados = document.getElementById('menu-badge-localizados');
+    const badgePendentes = document.getElementById('menu-badge-pendentes');
+    const badgeBipados = document.getElementById('menu-badge-bipados');
+    
+    if (badgeLocalizados) badgeLocalizados.textContent = stats.localizados;
+    if (badgePendentes) badgePendentes.textContent = stats.pendentes;
+    if (badgeBipados) badgeBipados.textContent = stats.bipados;
+    
+    // Mini stat no header
+    const miniStat = document.getElementById('mini-stat-total');
+    if (miniStat) miniStat.textContent = stats.total;
+}
+
+/**
+ * Navega para uma aba específica
+ */
+function navegarPara(aba) {
+    // Fecha menu mobile
+    fecharMenu();
+
+    // Atualiza menu items
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.tab === aba);
+    });
+
+    // Atualiza quick nav
+    document.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === aba);
+    });
+
+    // Atualiza tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.tab === aba);
+    });
+
+    // Atualiza painéis
+    document.querySelectorAll('.panel').forEach(panel => {
+        panel.classList.remove('active');
+    });
+    
+    const painel = document.getElementById(`panel-${aba}`);
+    if (painel) {
+        painel.classList.add('active');
+    }
+
+    // Carrega conteúdo
+    switch (aba) {
+        case 'scanner':
+            setTimeout(() => {
+                const input = document.getElementById('input-patrimonio');
+                if (input) input.focus();
+            }, 100);
+            break;
+        case 'localizados':
+            UI.renderizarLocalizados();
+            break;
+        case 'pendentes':
+            UI.renderizarPendentes();
+            break;
+        case 'bipados':
+            UI.renderizarBipados();
+            break;
+        case 'por-coordenacao':
+            UI.popularSelectCoordenacoes();
+            break;
+    }
+
+    // Scroll para o topo
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Atualiza stats do menu
+    _atualizarMenuStats();
+}
+
+// Expõe funções globalmente
+window.toggleMenu = toggleMenu;
+window.navegarPara = navegarPara;

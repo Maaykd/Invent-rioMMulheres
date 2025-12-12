@@ -2,9 +2,10 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Sistema de Inventário Patrimonial - Ministério das Mulheres">
     <meta name="theme-color" content="#7B1E6A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Sistema de Inventário Patrimonial</title>
     
     <!-- Biblioteca QuaggaJS para leitura de código de barras -->
@@ -14,11 +15,89 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- Header institucional -->
+    <!-- Header com Menu Hambúrguer -->
     <header class="header">
-        <h1>📋 Sistema de Inventário Patrimonial - MMulheres</h1>
-        <small>Ministério das Mulheres • Controle de Patrimônio - Feito por Maycon Douglas</small>
+        <div class="header-content">
+            <button class="menu-toggle" id="menu-toggle" onclick="toggleMenu()">
+                <span class="hamburger"></span>
+            </button>
+            <div class="header-title">
+                <h1>📋 Inventário Patrimonial</h1>
+                <small>MMulheres - Controle de Patrimônio - Feito por Maycon Douglas</small>
+            </div>
+            <div class="header-stats">
+                <span class="mini-stat" id="mini-stat-total">0</span>
+            </div>
+        </div>
     </header>
+
+    <!-- Overlay do Menu -->
+    <div class="menu-overlay" id="menu-overlay" onclick="toggleMenu()"></div>
+
+    <!-- Menu Lateral -->
+    <nav class="side-menu" id="side-menu">
+        <div class="menu-header">
+            <div class="menu-logo">📋</div>
+            <div class="menu-info">
+                <strong>Inventário Patrimonial</strong>
+                <small>Ministério das Mulheres</small>
+            </div>
+        </div>
+        
+        <div class="menu-stats">
+            <div class="menu-stat">
+                <span class="menu-stat-value" id="menu-stat-total">0</span>
+                <span class="menu-stat-label">Total</span>
+            </div>
+            <div class="menu-stat localizado">
+                <span class="menu-stat-value" id="menu-stat-localizados">0</span>
+                <span class="menu-stat-label">Localizados</span>
+            </div>
+            <div class="menu-stat pendente">
+                <span class="menu-stat-value" id="menu-stat-pendentes">0</span>
+                <span class="menu-stat-label">Pendentes</span>
+            </div>
+        </div>
+
+        <ul class="menu-items">
+            <li class="menu-item active" data-tab="scanner" onclick="navegarPara('scanner')">
+                <span class="menu-icon">📷</span>
+                <span class="menu-text">Scanner</span>
+            </li>
+            <li class="menu-item" data-tab="importar" onclick="navegarPara('importar')">
+                <span class="menu-icon">📁</span>
+                <span class="menu-text">Importar CSV</span>
+            </li>
+            <li class="menu-item" data-tab="localizados" onclick="navegarPara('localizados')">
+                <span class="menu-icon">✅</span>
+                <span class="menu-text">Localizados</span>
+                <span class="menu-badge" id="menu-badge-localizados">0</span>
+            </li>
+            <li class="menu-item" data-tab="pendentes" onclick="navegarPara('pendentes')">
+                <span class="menu-icon">⏳</span>
+                <span class="menu-text">Pendentes</span>
+                <span class="menu-badge warning" id="menu-badge-pendentes">0</span>
+            </li>
+            <li class="menu-item" data-tab="bipados" onclick="navegarPara('bipados')">
+                <span class="menu-icon">📋</span>
+                <span class="menu-text">Bipados</span>
+                <span class="menu-badge info" id="menu-badge-bipados">0</span>
+            </li>
+            <li class="menu-item" data-tab="por-coordenacao" onclick="navegarPara('por-coordenacao')">
+                <span class="menu-icon">🏢</span>
+                <span class="menu-text">Por Coordenação</span>
+            </li>
+            <li class="menu-divider"></li>
+            <li class="menu-item" data-tab="config" onclick="navegarPara('config')">
+                <span class="menu-icon">⚙️</span>
+                <span class="menu-text">Configurações</span>
+            </li>
+        </ul>
+
+        <div class="menu-footer">
+            <small>Feito por Maycon Douglas</small>
+        </div>
+    </nav>
 
     <main class="container">
         <!-- Cards de Estatísticas -->
@@ -61,7 +140,27 @@
             </div>
         </section>
 
-        <!-- Navegação por Abas -->
+        <!-- Navegação Rápida Mobile -->
+        <section class="quick-nav">
+            <button class="quick-btn active" data-tab="scanner" onclick="navegarPara('scanner')">
+                <span class="quick-icon">📷</span>
+                <span class="quick-label">Scanner</span>
+            </button>
+            <button class="quick-btn" data-tab="localizados" onclick="navegarPara('localizados')">
+                <span class="quick-icon">✅</span>
+                <span class="quick-label">Localizados</span>
+            </button>
+            <button class="quick-btn" data-tab="pendentes" onclick="navegarPara('pendentes')">
+                <span class="quick-icon">⏳</span>
+                <span class="quick-label">Pendentes</span>
+            </button>
+            <button class="quick-btn" data-tab="bipados" onclick="navegarPara('bipados')">
+                <span class="quick-icon">📋</span>
+                <span class="quick-label">Bipados</span>
+            </button>
+        </section>
+
+        <!-- Navegação por Abas (mantido para compatibilidade) -->
         <nav class="tabs">
             <button class="tab active" data-tab="scanner">📷 Scanner</button>
             <button class="tab" data-tab="importar">📁 Importar</button>
@@ -82,93 +181,93 @@
         </nav>
 
         <!-- ==================== PAINEL: SCANNER ==================== -->
-        <!-- ==================== PAINEL: SCANNER ==================== -->
-<article class="panel active" id="panel-scanner">
-    <h2>📷 Leitura de Patrimônio</h2>
-    
-    <div class="scanner-area">
-        <!-- Seleção de modo -->
-        <div class="scanner-modes">
-            <button class="mode-btn active" id="mode-manual" onclick="setMode('manual')">
-                ⌨️ Digitar/Leitor USB
-            </button>
-            <button class="mode-btn" id="mode-camera" onclick="setMode('camera')">
-                📱 Câmera do Celular
-            </button>
-            <button class="mode-btn" id="mode-lote" onclick="setMode('lote')">
-                📋 Bipar em Lote
-            </button>
-        </div>
-
-        <!-- Entrada Manual -->
-        <section class="input-section" id="section-manual">
-            <div class="input-group">
-                <label for="input-patrimonio">Número do Patrimônio:</label>
-                <div class="input-wrapper">
-                    <input type="text" 
-                           id="input-patrimonio" 
-                           placeholder="Ex: 6644720" 
-                           autocomplete="off"
-                           autofocus>
+        <article class="panel active" id="panel-scanner">
+            <h2>📷 Leitura de Patrimônio</h2>
+            
+            <div class="scanner-area">
+                <!-- Seleção de modo -->
+                <div class="scanner-modes">
+                    <button class="mode-btn active" id="mode-manual" onclick="setMode('manual')">
+                        ⌨️ Digitar/Leitor USB
+                    </button>
+                    <button class="mode-btn" id="mode-camera" onclick="setMode('camera')">
+                        📱 Câmera do Celular
+                    </button>
+                    <button class="mode-btn" id="mode-lote" onclick="setMode('lote')">
+                        📋 Bipar em Lote
+                    </button>
                 </div>
-            </div>
-            <button class="btn btn-success btn-lg btn-block" onclick="verificarPatrimonio()">
-                ✓ Verificar Patrimônio
-            </button>
-            <p class="shortcut-hint">💡 Pressione <kbd>Enter</kbd> para verificar</p>
-        </section>
 
-        <!-- Câmera -->
-        <section class="camera-section" id="section-camera">
-            <div class="camera-container">
-                <div id="camera-preview"></div>
-                <div class="camera-overlay size-medium" id="camera-overlay"></div>
-            </div>
-            <div class="camera-status" id="camera-status">
-                Clique em "Iniciar Câmera" para começar
-            </div>
-            <div class="camera-controls">
-                <button class="btn btn-success" id="btn-start-camera" onclick="iniciarCamera()">
-                    ▶️ Iniciar Câmera
-                </button>
-                <button class="btn btn-danger" id="btn-stop-camera" onclick="pararCamera()" style="display: none;">
-                    ⏹️ Parar
-                </button>
-                <button class="btn btn-flash" id="btn-flash" onclick="toggleFlash()" style="display: none;">
-                    🔦 Lanterna
-                </button>
-            </div>
-            <div class="camera-advanced-controls" id="camera-advanced" style="display: none;">
-                <div class="control-row">
-                    <label>🔍 Zoom:</label>
-                    <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1" 
-                           oninput="ajustarZoom(this.value)">
-                    <span class="value-display" id="zoom-value">1.0x</span>
-                </div>
-                <div class="control-row">
-                    <label>📐 Área de leitura:</label>
-                    <div class="size-buttons">
-                        <button class="size-btn" onclick="setOverlaySize('small')">Pequena</button>
-                        <button class="size-btn active" onclick="setOverlaySize('medium')">Média</button>
-                        <button class="size-btn" onclick="setOverlaySize('large')">Grande</button>
+                <!-- Entrada Manual -->
+                <section class="input-section" id="section-manual">
+                    <div class="input-group">
+                        <label for="input-patrimonio">Número do Patrimônio:</label>
+                        <div class="input-wrapper">
+                            <input type="text" 
+                                   id="input-patrimonio" 
+                                   placeholder="Ex: 6644720" 
+                                   autocomplete="off"
+                                   inputmode="numeric"
+                                   autofocus>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <div class="info-box">
-                <strong>📱 Dicas para melhor leitura:</strong><br>
-                • Mantenha o código de barras dentro da área marcada<br>
-                • Use boa iluminação ou ative a lanterna<br>
-                • Ajuste o zoom para códigos pequenos<br>
-                • Mantenha o celular estável
-            </div>
-        </section>
+                    <button class="btn btn-success btn-lg btn-block" onclick="verificarPatrimonio()">
+                        ✓ Verificar Patrimônio
+                    </button>
+                    <p class="shortcut-hint">💡 Pressione <kbd>Enter</kbd> para verificar</p>
+                </section>
 
-        <!-- Bipagem em Lote -->
-        <section class="lote-section" id="section-lote" style="display: none;">
-            <div class="input-group">
-                <label for="input-lote">Cole a lista de patrimônios:</label>
-                <textarea id="input-lote" 
-                          placeholder="Cole aqui os patrimônios...
+                <!-- Câmera -->
+                <section class="camera-section" id="section-camera">
+                    <div class="camera-container">
+                        <div id="camera-preview"></div>
+                        <div class="camera-overlay size-medium" id="camera-overlay"></div>
+                    </div>
+                    <div class="camera-status" id="camera-status">
+                        Clique em "Iniciar Câmera" para começar
+                    </div>
+                    <div class="camera-controls">
+                        <button class="btn btn-success" id="btn-start-camera" onclick="iniciarCamera()">
+                            ▶️ Iniciar Câmera
+                        </button>
+                        <button class="btn btn-danger" id="btn-stop-camera" onclick="pararCamera()" style="display: none;">
+                            ⏹️ Parar
+                        </button>
+                        <button class="btn btn-flash" id="btn-flash" onclick="toggleFlash()" style="display: none;">
+                            🔦 Lanterna
+                        </button>
+                    </div>
+                    <div class="camera-advanced-controls" id="camera-advanced" style="display: none;">
+                        <div class="control-row">
+                            <label>🔍 Zoom:</label>
+                            <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1" 
+                                   oninput="ajustarZoom(this.value)">
+                            <span class="value-display" id="zoom-value">1.0x</span>
+                        </div>
+                        <div class="control-row">
+                            <label>📐 Área de leitura:</label>
+                            <div class="size-buttons">
+                                <button class="size-btn" onclick="setOverlaySize('small')">Pequena</button>
+                                <button class="size-btn active" onclick="setOverlaySize('medium')">Média</button>
+                                <button class="size-btn" onclick="setOverlaySize('large')">Grande</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box">
+                        <strong>📱 Dicas para melhor leitura:</strong><br>
+                        • Mantenha o código de barras dentro da área marcada<br>
+                        • Use boa iluminação ou ative a lanterna<br>
+                        • Ajuste o zoom para códigos pequenos<br>
+                        • Mantenha o celular estável
+                    </div>
+                </section>
+
+                <!-- Bipagem em Lote -->
+                <section class="lote-section" id="section-lote" style="display: none;">
+                    <div class="input-group">
+                        <label for="input-lote">Cole a lista de patrimônios:</label>
+                        <textarea id="input-lote" 
+                                  placeholder="Cole aqui os patrimônios...
 
 Aceita:
 - Um por linha
@@ -179,59 +278,59 @@ Exemplo:
 6644720
 6644721
 6644722"
-                          rows="10"></textarea>
-            </div>
-            <div class="lote-actions">
-                <button class="btn btn-success btn-lg" onclick="processarLote()">
-                    ✓ Processar Lista
-                </button>
-                <button class="btn btn-outline" onclick="limparLote()">
-                    🗑️ Limpar
-                </button>
-            </div>
-            <div class="info-box">
-                <strong>💡 Dicas:</strong><br>
-                • Copie uma coluna inteira do Excel e cole aqui<br>
-                • Funciona com lista separada por vírgula, ponto-vírgula ou Enter<br>
-                • Duplicatas são ignoradas automaticamente
-            </div>
-            <!-- Resultado do processamento em lote -->
-            <div class="lote-resultado" id="lote-resultado" style="display: none;">
-                <h4>📊 Resultado do Processamento</h4>
-                <div class="lote-stats">
-                    <div class="lote-stat sucesso">
-                        <span class="numero" id="lote-sucesso">0</span>
-                        <span class="label">Bipados</span>
+                                  rows="10"></textarea>
                     </div>
-                    <div class="lote-stat ja-bipado">
-                        <span class="numero" id="lote-ja-bipado">0</span>
-                        <span class="label">Já bipados</span>
+                    <div class="lote-actions">
+                        <button class="btn btn-success btn-lg" onclick="processarLote()">
+                            ✓ Processar Lista
+                        </button>
+                        <button class="btn btn-outline" onclick="limparLote()">
+                            🗑️ Limpar
+                        </button>
                     </div>
-                    <div class="lote-stat erro">
-                        <span class="numero" id="lote-nao-encontrado">0</span>
-                        <span class="label">Não encontrados</span>
+                    <div class="info-box">
+                        <strong>💡 Dicas:</strong><br>
+                        • Copie uma coluna inteira do Excel e cole aqui<br>
+                        • Funciona com lista separada por vírgula, ponto-vírgula ou Enter<br>
+                        • Duplicatas são ignoradas automaticamente
                     </div>
+                    <!-- Resultado do processamento em lote -->
+                    <div class="lote-resultado" id="lote-resultado" style="display: none;">
+                        <h4>📊 Resultado do Processamento</h4>
+                        <div class="lote-stats">
+                            <div class="lote-stat sucesso">
+                                <span class="numero" id="lote-sucesso">0</span>
+                                <span class="label">Bipados</span>
+                            </div>
+                            <div class="lote-stat ja-bipado">
+                                <span class="numero" id="lote-ja-bipado">0</span>
+                                <span class="label">Já bipados</span>
+                            </div>
+                            <div class="lote-stat erro">
+                                <span class="numero" id="lote-nao-encontrado">0</span>
+                                <span class="label">Não encontrados</span>
+                            </div>
+                        </div>
+                        <div class="lote-detalhes" id="lote-detalhes"></div>
+                    </div>
+                </section>
+
+                <!-- Resultado do Scan -->
+                <div class="scan-result" id="scan-result">
+                    <div class="icon" id="result-icon"></div>
+                    <div class="status" id="result-status"></div>
+                    <div class="details" id="result-details"></div>
                 </div>
-                <div class="lote-detalhes" id="lote-detalhes"></div>
-            </div>
-        </section>
 
-        <!-- Resultado do Scan -->
-        <div class="scan-result" id="scan-result">
-            <div class="icon" id="result-icon"></div>
-            <div class="status" id="result-status"></div>
-            <div class="details" id="result-details"></div>
-        </div>
-
-        <!-- Histórico de Leituras -->
-        <aside class="historico">
-            <h3>🕐 Últimas Leituras</h3>
-            <div id="historico-lista">
-                <p class="empty-state">Nenhuma leitura realizada</p>
+                <!-- Histórico de Leituras -->
+                <aside class="historico">
+                    <h3>🕐 Últimas Leituras</h3>
+                    <div id="historico-lista">
+                        <p class="empty-state">Nenhuma leitura realizada</p>
+                    </div>
+                </aside>
             </div>
-        </aside>
-    </div>
-</article>
+        </article>
 
         <!-- ==================== PAINEL: IMPORTAR ==================== -->
         <article class="panel" id="panel-importar">
@@ -486,6 +585,9 @@ Exemplo:
 
     <!-- Toast para notificações -->
     <div class="toast" id="toast"></div>
+
+    <!-- Botão Voltar ao Topo -->
+    <button class="scroll-top" id="scroll-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</button>
 
     <!-- Scripts modulares -->
     <script src="js/utils.js"></script>
