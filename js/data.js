@@ -5,33 +5,34 @@
  * OTIMIZAÇÃO: Usa índices hash para acesso O(1) em vez de O(n)
  */
 
-const Inventario = (function() {
+const Inventario = (function () {
     'use strict';
 
     // ==================== ESTADO INTERNO ====================
-    
+
     // Lista principal de itens
     let _itens = [];
-    
-    // Registro de bipagens: patrimônio -> dataHora
+
+    // Registro de bipagens: patrimônio -> { data_bipagem, observacao }
     let _bipagens = {};
-    
+
+
     // Histórico de leituras (últimas 50)
     let _historico = [];
-    
+
     // ==================== ÍNDICES PARA ACESSO O(1) ====================
-    
+
     // Índice por patrimônio (chave principal)
     let _indexPatrimonio = new Map();
-    
+
     // Índice por coordenação destino
     let _indexPorCoordenacao = new Map();
-    
+
     // Listas pré-processadas
     let _listaLocalizados = [];
     let _listaPendentes = [];
     let _listaBipados = [];
-    
+
     // Cache de estatísticas
     let _estatisticas = {
         total: 0,
@@ -52,10 +53,10 @@ const Inventario = (function() {
             _itens = dados.inventario || [];
             _bipagens = dados.bipagens || {};
             _historico = dados.historico || [];
-            
+
             // Reconstrói todos os índices
             reconstruirIndices();
-            
+
             console.log(`[Inventario] Inicializado: ${_itens.length} itens, ${Object.keys(_bipagens).length} bipagens`);
         } catch (e) {
             console.error('[Inventario] Erro na inicialização:', e);
@@ -82,10 +83,10 @@ const Inventario = (function() {
         for (const item of _itens) {
             // Normaliza patrimônio para índice (remove zeros à esquerda)
             const patrimonioNormalizado = Utils.normalizarPatrimonio(item.patrimonio);
-            
+
             // Índice por patrimônio (usa versão normalizada como chave)
             _indexPatrimonio.set(patrimonioNormalizado, item);
-            
+
             // Índice por coordenação destino
             const coord = (item.coordenacao_destino || '').trim();
             if (coord) {
@@ -94,7 +95,7 @@ const Inventario = (function() {
                 }
                 _indexPorCoordenacao.get(coord).push(item);
             }
-            
+
             // Listas pré-processadas
             const temUorg = item.uorg_destino && item.uorg_destino.trim() !== '';
             if (temUorg) {
@@ -102,7 +103,7 @@ const Inventario = (function() {
             } else {
                 _listaPendentes.push(item);
             }
-            
+
             // Lista de bipados
             if (_bipagens[item.patrimonio]) {
                 _listaBipados.push(item);
@@ -130,8 +131,8 @@ const Inventario = (function() {
         _estatisticas.localizados = _listaLocalizados.length;
         _estatisticas.pendentes = _listaPendentes.length;
         _estatisticas.bipados = Object.keys(_bipagens).length;
-        _estatisticas.percentual = _estatisticas.total > 0 
-            ? Math.round((_estatisticas.localizados / _estatisticas.total) * 100) 
+        _estatisticas.percentual = _estatisticas.total > 0
+            ? Math.round((_estatisticas.localizados / _estatisticas.total) * 100)
             : 0;
     }
 
@@ -144,13 +145,13 @@ const Inventario = (function() {
     function importar(novosItens) {
         // Sanitiza todos os itens
         _itens = novosItens.map(item => Utils.sanitizarObjeto(item));
-        
+
         // Salva no storage
         Storage.salvarInventario(_itens);
-        
+
         // Reconstrói índices
         reconstruirIndices();
-        
+
         return {
             total: _itens.length,
             localizados: _estatisticas.localizados,
@@ -199,9 +200,9 @@ const Inventario = (function() {
      */
     function obterLocalizados(busca = '') {
         if (!busca) return _listaLocalizados;
-        
+
         const termo = Utils.normalizar(busca);
-        return _listaLocalizados.filter(item => 
+        return _listaLocalizados.filter(item =>
             Utils.normalizar(item.patrimonio).includes(termo) ||
             Utils.normalizar(item.descricao || '').includes(termo)
         );
@@ -214,9 +215,9 @@ const Inventario = (function() {
      */
     function obterPendentes(busca = '') {
         if (!busca) return _listaPendentes;
-        
+
         const termo = Utils.normalizar(busca);
-        return _listaPendentes.filter(item => 
+        return _listaPendentes.filter(item =>
             Utils.normalizar(item.patrimonio).includes(termo) ||
             Utils.normalizar(item.descricao || '').includes(termo)
         );
@@ -231,15 +232,16 @@ const Inventario = (function() {
         // Recalcula lista de bipados (pode ter mudado)
         _listaBipados = _itens.filter(item => _bipagens[item.patrimonio]);
         _listaBipados.sort((a, b) => {
-            const dataA = _bipagens[a.patrimonio];
-            const dataB = _bipagens[b.patrimonio];
-            return new Date(dataB) - new Date(dataA);
+            const dataA = _bipagens[a.patrimonio]?.data_bipagem;
+            const dataB = _bipagens[b.patrimonio]?.data_bipagem;
+            return new Date(dataB || 0) - new Date(dataA || 0);
+
         });
 
         if (!busca) return _listaBipados;
-        
+
         const termo = Utils.normalizar(busca);
-        return _listaBipados.filter(item => 
+        return _listaBipados.filter(item =>
             Utils.normalizar(item.patrimonio).includes(termo) ||
             Utils.normalizar(item.descricao || '').includes(termo)
         );
@@ -272,7 +274,7 @@ const Inventario = (function() {
     function registrarBipagem(patrimonio) {
         const patrimonioLimpo = patrimonio.toString().trim();
         const item = buscarPorPatrimonio(patrimonioLimpo);
-        
+
         if (!item) {
             return {
                 status: 'nao_encontrado',
@@ -281,35 +283,50 @@ const Inventario = (function() {
                 timestamp: new Date().toISOString()
             };
         }
-        
+
         if (_bipagens[item.patrimonio]) {
+            const registro = _bipagens[item.patrimonio];
             return {
                 status: 'ja_bipado',
                 mensagem: 'Item já foi bipado nesta sessão',
                 patrimonio: item.patrimonio,
                 item: item,
-                data_bipagem: _bipagens[item.patrimonio],
+                data_bipagem: registro.data_bipagem,
+                observacao: registro.observacao || null,
                 timestamp: new Date().toISOString()
             };
         }
-        
+
+
         // Registra nova bipagem
         const agora = new Date().toISOString();
-        _bipagens[item.patrimonio] = agora;
-        
-        // Salva no storage
+        _bipagens[item.patrimonio] = {
+            data_bipagem: agora,
+            observacao: null
+        };
         Storage.salvarBipagens(_bipagens);
-        
-        // Atualiza estatísticas
         _atualizarEstatisticas();
-        
         return {
             status: 'sucesso',
             mensagem: 'Item encontrado e registrado!',
             patrimonio: item.patrimonio,
             item: item,
+            data_bipagem: agora,
+            observacao: null,
             timestamp: agora
         };
+
+    }
+
+    /**
+ * Atualiza a observação de uma bipagem
+ * @param {string} patrimonio
+ * @param {string|null} observacao
+ */
+    function atualizarObservacao(patrimonio, observacao) {
+        if (!_bipagens[patrimonio]) return;
+        _bipagens[patrimonio].observacao = observacao;
+        Storage.salvarBipagens(_bipagens);
     }
 
     /**
@@ -318,8 +335,9 @@ const Inventario = (function() {
      * @returns {string|null} Data da bipagem ou null
      */
     function verificarBipagem(patrimonio) {
-        return _bipagens[patrimonio] || null;
+        return _bipagens[patrimonio]?.data_bipagem || null;
     }
+
 
     /**
      * Retorna todas as bipagens
@@ -376,7 +394,7 @@ const Inventario = (function() {
         _listaLocalizados = [];
         _listaPendentes = [];
         _listaBipados = [];
-        
+
         Storage.limparTudo();
         _atualizarEstatisticas();
     }
@@ -410,13 +428,20 @@ const Inventario = (function() {
                 break;
 
             case 'bipados':
-                colunas = ['patrimonio', 'codigo_item', 'descricao', 'categoria', 'valor', 'uorg_destino', 'coordenacao_destino', 'localidade', 'data_bipagem'];
-                dados = obterBipados().map(i => ({
-                    ...i,
-                    data_bipagem: _bipagens[i.patrimonio]
-                }));
+                colunas = ['patrimonio', 'codigo_item', 'descricao', 'categoria', 'valor',
+                    'uorg_destino', 'coordenacao_destino', 'localidade',
+                    'data_bipagem', 'observacao'];
+                dados = obterBipados().map(i => {
+                    const reg = _bipagens[i.patrimonio] || {};
+                    return {
+                        ...i,
+                        data_bipagem: reg.data_bipagem || '',
+                        observacao: reg.observacao || ''
+                    };
+                });
                 nomeArquivo = `itens_bipados_${agora}.csv`;
                 break;
+
 
             case 'coordenacao':
                 if (!coordenacao) {
@@ -427,7 +452,8 @@ const Inventario = (function() {
                 dados = itensCoord.map(i => ({
                     ...i,
                     bipado: _bipagens[i.patrimonio] ? 'SIM' : 'NAO',
-                    data_leitura: _bipagens[i.patrimonio] || ''
+                    data_bipagem: _bipagens[i.patrimonio]?.data_bipagem || ''
+
                 }));
                 nomeArquivo = `inventario_${coordenacao.replace(/[^a-z0-9]+/gi, '_')}.csv`;
                 break;
@@ -462,6 +488,7 @@ const Inventario = (function() {
         registrarBipagem,
         verificarBipagem,
         obterBipagens,
+        atualizarObservacao,
         limparBipagens,
         adicionarHistorico,
         obterHistorico,

@@ -3,7 +3,7 @@
  * Renderização segura, modais, toasts, ordenação de tabelas
  */
 
-const UI = (function() {
+const UI = (function () {
     'use strict';
 
     // Estado de ordenação das tabelas
@@ -34,7 +34,7 @@ const UI = (function() {
 
         t.textContent = `${icons[tipo] || ''} ${mensagem}`;
         t.className = `toast ${tipo} show`;
-        
+
         setTimeout(() => t.classList.remove('show'), 3500);
     }
 
@@ -46,7 +46,7 @@ const UI = (function() {
      */
     function mostrarLoader(texto = 'Carregando...') {
         let loader = document.getElementById('loader-overlay');
-        
+
         if (!loader) {
             loader = document.createElement('div');
             loader.id = 'loader-overlay';
@@ -85,9 +85,9 @@ const UI = (function() {
      */
     function confirmar(config) {
         return new Promise((resolve) => {
-            const { 
-                titulo = 'Confirmar', 
-                mensagem = 'Deseja continuar?', 
+            const {
+                titulo = 'Confirmar',
+                mensagem = 'Deseja continuar?',
                 textoBotaoConfirmar = 'Confirmar',
                 tipo = 'primary' // 'primary', 'danger'
             } = config;
@@ -142,18 +142,18 @@ const UI = (function() {
      */
     function criarCelula(conteudo, opcoes = {}) {
         const td = document.createElement('td');
-        
+
         if (opcoes.html) {
             // Usa sanitização antes de inserir HTML
             td.innerHTML = conteudo;
         } else {
             td.textContent = conteudo || '-';
         }
-        
+
         if (opcoes.classe) {
             td.className = opcoes.classe;
         }
-        
+
         return td;
     }
 
@@ -226,7 +226,7 @@ const UI = (function() {
             if (dados[i]) {
                 const td = tr.children[0];
                 td.innerHTML = `<strong>${Utils.sanitizar(dados[i].patrimonio)}</strong>`;
-                
+
                 // Badge na UORG
                 const tdUorg = tr.children[2];
                 tdUorg.innerHTML = `<span class="badge badge-success">${Utils.sanitizar(dados[i].uorg_destino)}</span>`;
@@ -261,7 +261,7 @@ const UI = (function() {
             if (dados[i]) {
                 const td = tr.children[0];
                 td.innerHTML = `<strong>${Utils.sanitizar(dados[i].patrimonio)}</strong>`;
-                
+
                 const bipado = Inventario.verificarBipagem(dados[i].patrimonio);
                 const tdStatus = tr.children[4];
                 if (bipado) {
@@ -288,29 +288,36 @@ const UI = (function() {
 
         renderizarTabela(tbody, dados, (item) => {
             const temUorg = item.uorg_destino && item.uorg_destino.trim() !== '';
+            const reg = bipagens[item.patrimonio] || {};
             return [
                 { valor: item.patrimonio },
                 { valor: item.descricao },
                 { valor: temUorg ? item.uorg_destino : 'PENDENTE' },
                 { valor: item.coordenacao_destino },
-                { valor: Utils.formatarData(bipagens[item.patrimonio]) }
+                { valor: Utils.formatarData(reg.data_bipagem) },
+                { valor: reg.observacao || '' }
             ];
+
         }, 'Nenhum item bipado ainda');
 
         // Estiliza células
         tbody.querySelectorAll('tr').forEach((tr, i) => {
             if (dados[i]) {
                 tr.children[0].innerHTML = `<strong>${Utils.sanitizar(dados[i].patrimonio)}</strong>`;
-                
+
                 const temUorg = dados[i].uorg_destino && dados[i].uorg_destino.trim() !== '';
                 if (!temUorg) {
                     tr.children[2].innerHTML = `<span style="color:var(--cor-alerta)">PENDENTE</span>`;
                 }
-                
-                tr.children[4].innerHTML = `<span class="badge badge-info">${Utils.formatarData(bipagens[dados[i].patrimonio])}</span>`;
+
+                const reg = bipagens[dados[i].patrimonio] || {};
+                tr.children[4].innerHTML =
+                    `<span class="badge badge-info">${Utils.formatarData(reg.data_bipagem)}</span>`;
             }
         });
+
     }
+
 
     /**
      * Renderiza tabela por coordenação
@@ -353,14 +360,14 @@ const UI = (function() {
         tbody.querySelectorAll('tr').forEach((tr, i) => {
             if (dados[i]) {
                 tr.children[0].innerHTML = `<strong>${Utils.sanitizar(dados[i].patrimonio)}</strong>`;
-                
+
                 const bipado = bipagens[dados[i].patrimonio];
-                
+
                 // Coluna Status (6): mostra se foi bipado ou não
                 tr.children[6].innerHTML = bipado
                     ? `<span class="badge badge-success">Bipado</span>`
                     : `-`;
-                    
+
                 // Coluna Data Leitura (7): mostra data/hora se bipado
                 if (bipado) {
                     tr.children[7].innerHTML = `<span class="badge badge-info">${Utils.formatarData(bipado)}</span>`;
@@ -420,7 +427,7 @@ const UI = (function() {
             case 'localizados': renderizarLocalizados(); break;
             case 'pendentes': renderizarPendentes(); break;
             case 'bipados': renderizarBipados(); break;
-            case 'coordenacao': 
+            case 'coordenacao':
                 const select = document.getElementById('select-coordenacao');
                 if (select) renderizarPorCoordenacao(select.value);
                 break;
@@ -438,12 +445,12 @@ const UI = (function() {
         if (!config) return;
 
         const icone = config.direcao === 'asc' ? '↑' : '↓';
-        
+
         document.querySelectorAll(`[data-tabela="${tabela}"] th`).forEach(th => {
             const coluna = th.dataset.coluna;
             const span = th.querySelector('.sort-icon') || document.createElement('span');
             span.className = 'sort-icon';
-            
+
             if (coluna === config.coluna) {
                 span.textContent = icone;
                 th.classList.add('sorted');
@@ -451,7 +458,7 @@ const UI = (function() {
                 span.textContent = '↕';
                 th.classList.remove('sorted');
             }
-            
+
             if (!th.querySelector('.sort-icon')) {
                 th.appendChild(span);
             }
@@ -477,7 +484,7 @@ const UI = (function() {
         _setTexto('stat-total-text', stats.total);
         _setTexto('stat-localizados-text', stats.localizados);
         _setTexto('stat-pendentes-text', stats.pendentes);
-        
+
         const progressFill = document.getElementById('progress-fill');
         if (progressFill) {
             progressFill.style.width = stats.percentual + '%';
@@ -510,35 +517,49 @@ const UI = (function() {
 
         if (historico.length === 0) {
             lista.innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">📭</div>
-                    <p>Nenhuma leitura ainda</p>
-                </div>
-            `;
+            <div class="empty-state">
+                <div class="icon">📭</div>
+                <p>Nenhuma leitura ainda</p>
+            </div>
+        `;
             return;
         }
 
         lista.innerHTML = '';
         historico.forEach(item => {
             const div = document.createElement('div');
-            div.className = 'historico-item';
-
             let iconClass = 'error', emoji = '❌';
             if (item.status === 'sucesso') { iconClass = 'success'; emoji = '✅'; }
             else if (item.status === 'ja_bipado') { iconClass = 'warning'; emoji = '⚠️'; }
 
+            div.className = `historico-item ${iconClass}`;
             div.innerHTML = `
-                <div class="status-icon ${iconClass}">${emoji}</div>
-                <div class="info">
-                    <div class="patrimonio">${Utils.sanitizar(item.patrimonio)}</div>
-                    <div class="descricao">${Utils.sanitizar(item.item?.descricao || item.mensagem)}</div>
-                </div>
-                <div class="time">${Utils.formatarHora(item.timestamp)}</div>
-            `;
+            <div class="status-icon ${iconClass}">${emoji}</div>
+            <div class="info">
+                <div class="patrimonio">${Utils.sanitizar(item.patrimonio)}</div>
+                <div class="descricao">${Utils.sanitizar(item.item?.descricao || item.mensagem)}</div>
+                ${item.observacao ? `<div class="observacao">${Utils.sanitizar(item.observacao)}</div>` : ''}
+            </div>
+            <div class="time">${Utils.formatarHora(item.timestamp)}</div>
+        `;
+
+            // clicar no histórico reabre o resultado e o modal de observação
+            div.onclick = () => {
+                UI.mostrarResultado(item);
+                UI.solicitarObservacao(item).then(obs => {
+                    if (obs !== null) {
+                        Inventario.atualizarObservacao(item.patrimonio, obs);
+                        item.observacao = obs;
+                        Inventario.adicionarHistorico(item);
+                        UI.renderizarHistorico();
+                    }
+                });
+            };
 
             lista.appendChild(div);
         });
     }
+
 
     // ==================== RESULTADO DO SCAN ====================
 
@@ -607,6 +628,115 @@ const UI = (function() {
         container.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
+    /**
+ * Pergunta ao usuário qual observação quer registrar
+ * @param {Object} resultado - mesmo objeto usado em mostrarResultado
+ * @returns {Promise<string|null>}
+ */
+    function solicitarObservacao(itemOuResultado) {
+        return new Promise(resolve => {
+            const existente = document.getElementById('modal-observacao');
+            if (existente) existente.remove();
+
+            const motivos = [
+                'Patrimônio na sala incorreta',
+                'Troca de UORG de patrimônio',
+                'Bem avariado',
+                'Etiqueta ilegível/danificada',
+                'Divergência de descrição',
+                'Bem não localizado visualmente'
+            ];
+            const MOTIVO_TROCA = 'Troca de UORG de patrimônio';
+
+            const todasBipagens = Inventario.obterBipagens();
+            const atual = todasBipagens[itemOuResultado.patrimonio]?.observacao || '';
+
+            const coordenacoes = Inventario.listarCoordenacoes();
+
+            const modal = document.createElement('div');
+            modal.id = 'modal-observacao';
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+      <div class="modal-box">
+        <h3>Observação da bipagem</h3>
+        <p>
+          Patrimônio ${Utils.sanitizar(itemOuResultado.patrimonio)}
+          – ${Utils.sanitizar(itemOuResultado.item?.descricao || '')}
+        </p>
+
+        <label class="label-small">Motivo</label>
+        <select id="obs-select" class="input-full">
+          <option value="">Sem observação</option>
+          ${motivos.map(m => `
+            <option value="${Utils.sanitizar(m)}" ${m === atual ? 'selected' : ''}>
+              ${Utils.sanitizar(m)}
+            </option>
+          `).join('')}
+        </select>
+
+        <div id="obs-coord-wrapper" style="display:none; margin-top:0.5rem;">
+          <label class="label-small">Nova coordenação / UORG</label>
+          <select id="obs-coord" class="input-full">
+            <option value="">Selecione...</option>
+            ${coordenacoes.map(c => `
+              <option value="${Utils.sanitizar(c)}">${Utils.sanitizar(c)}</option>
+            `).join('')}
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-secondary" id="obs-cancelar">Fechar</button>
+          <button class="btn btn-primary" id="obs-salvar">Salvar</button>
+        </div>
+      </div>
+    `;
+            document.body.appendChild(modal);
+
+            const selectMotivo = modal.querySelector('#obs-select');
+            const wrapperCoord = modal.querySelector('#obs-coord-wrapper');
+            const selectCoord = modal.querySelector('#obs-coord');
+
+            // mostra/esconde coordenação só na troca de UORG
+            const atualizarVisibilidadeCoord = () => {
+                if (selectMotivo.value === MOTIVO_TROCA) {
+                    wrapperCoord.style.display = 'block';
+                } else {
+                    wrapperCoord.style.display = 'none';
+                }
+            };
+            atualizarVisibilidadeCoord();
+            selectMotivo.addEventListener('change', atualizarVisibilidadeCoord);
+
+            const fechar = (valor) => {
+                modal.classList.remove('active');
+                setTimeout(() => modal.remove(), 200);
+                resolve(valor);
+            };
+
+            modal.offsetHeight;
+            modal.classList.add('active');
+
+            modal.querySelector('#obs-cancelar').onclick = () => fechar(null);
+            modal.querySelector('#obs-salvar').onclick = () => {
+                let v = selectMotivo.value || null;
+
+                if (v === MOTIVO_TROCA) {
+                    const destino = selectCoord.value || '';
+                    if (destino) {
+                        v = `${MOTIVO_TROCA} → ${destino}`;
+                    }
+                }
+
+                fechar(v);
+            };
+            modal.onclick = (e) => {
+                if (e.target === modal) fechar(null);
+            };
+        });
+    }
+
+
+
     // ==================== SCROLL TOP ====================
 
     /**
@@ -614,7 +744,7 @@ const UI = (function() {
      */
     function configurarScrollTop() {
         let btn = document.getElementById('btn-scroll-top');
-        
+
         if (!btn) {
             btn = document.createElement('button');
             btn.id = 'btn-scroll-top';
@@ -644,9 +774,9 @@ const UI = (function() {
         if (!select) return;
 
         const coordenacoes = Inventario.listarCoordenacoes();
-        
+
         select.innerHTML = '<option value="">-- Escolha uma coordenação destino --</option>';
-        
+
         coordenacoes.forEach(coord => {
             const option = document.createElement('option');
             option.value = coord;
@@ -672,6 +802,7 @@ const UI = (function() {
         atualizarEstatisticas,
         renderizarHistorico,
         mostrarResultado,
+        solicitarObservacao,
         configurarScrollTop,
         popularSelectCoordenacoes
     };

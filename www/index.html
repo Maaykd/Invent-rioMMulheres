@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,13 +8,14 @@
     <meta name="theme-color" content="#7B1E6A">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Sistema de Inventário Patrimonial</title>
-    
+
     <!-- Biblioteca QuaggaJS para leitura de código de barras -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-    
+
     <!-- Estilos -->
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <!-- Header com Menu Hambúrguer -->
     <header class="header">
@@ -43,7 +45,7 @@
                 <small>Ministério das Mulheres</small>
             </div>
         </div>
-        
+
         <div class="menu-stats">
             <div class="menu-stat">
                 <span class="menu-stat-value" id="menu-stat-total">0</span>
@@ -183,7 +185,7 @@
         <!-- ==================== PAINEL: SCANNER ==================== -->
         <article class="panel active" id="panel-scanner">
             <h2>📷 Leitura de Patrimônio</h2>
-            
+
             <div class="scanner-area">
                 <!-- Seleção de modo -->
                 <div class="scanner-modes">
@@ -203,12 +205,8 @@
                     <div class="input-group">
                         <label for="input-patrimonio">Número do Patrimônio:</label>
                         <div class="input-wrapper">
-                            <input type="text" 
-                                   id="input-patrimonio" 
-                                   placeholder="Ex: 6644720" 
-                                   autocomplete="off"
-                                   inputmode="numeric"
-                                   autofocus>
+                            <input type="text" id="input-patrimonio" placeholder="Ex: 6644720" autocomplete="off"
+                                inputmode="numeric" autofocus>
                         </div>
                     </div>
                     <button class="btn btn-success btn-lg btn-block" onclick="verificarPatrimonio()">
@@ -230,7 +228,8 @@
                         <button class="btn btn-success" id="btn-start-camera" onclick="iniciarCamera()">
                             ▶️ Iniciar Câmera
                         </button>
-                        <button class="btn btn-danger" id="btn-stop-camera" onclick="pararCamera()" style="display: none;">
+                        <button class="btn btn-danger" id="btn-stop-camera" onclick="pararCamera()"
+                            style="display: none;">
                             ⏹️ Parar
                         </button>
                         <button class="btn btn-flash" id="btn-flash" onclick="toggleFlash()" style="display: none;">
@@ -240,8 +239,8 @@
                     <div class="camera-advanced-controls" id="camera-advanced" style="display: none;">
                         <div class="control-row">
                             <label>🔍 Zoom:</label>
-                            <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1" 
-                                   oninput="ajustarZoom(this.value)">
+                            <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1"
+                                oninput="ajustarZoom(this.value)">
                             <span class="value-display" id="zoom-value">1.0x</span>
                         </div>
                         <div class="control-row">
@@ -266,8 +265,7 @@
                 <section class="lote-section" id="section-lote" style="display: none;">
                     <div class="input-group">
                         <label for="input-lote">Cole a lista de patrimônios:</label>
-                        <textarea id="input-lote" 
-                                  placeholder="Cole aqui os patrimônios...
+                        <textarea id="input-lote" placeholder="Cole aqui os patrimônios...
 
 Aceita:
 - Um por linha
@@ -277,8 +275,7 @@ Aceita:
 Exemplo:
 6644720
 6644721
-6644722"
-                                  rows="10"></textarea>
+6644722" rows="10"></textarea>
                     </div>
                     <div class="lote-actions">
                         <button class="btn btn-success btn-lg" onclick="processarLote()">
@@ -335,9 +332,9 @@ Exemplo:
         <!-- ==================== PAINEL: IMPORTAR ==================== -->
         <article class="panel" id="panel-importar">
             <h2>📁 Importar Inventário</h2>
-            
+
             <div class="info-box">
-                <strong>Formato esperado:</strong> Arquivo CSV com colunas: patrimônio, descrição, categoria, valor, 
+                <strong>Formato esperado:</strong> Arquivo CSV com colunas: patrimônio, descrição, categoria, valor,
                 <u>uorg_destino</u>, coordenacao_destino, localidade.<br><br>
                 <strong>Lógica de verificação:</strong><br>
                 • Itens com <strong>UORG Destino preenchido</strong> = Já localizado ✅<br>
@@ -350,26 +347,24 @@ Exemplo:
                 <h3>Clique ou arraste um arquivo CSV</h3>
                 <p>Separador: ponto-e-vírgula (;) ou vírgula (,)</p>
             </div>
-            
+
             <div id="import-status"></div>
         </article>
 
         <!-- ==================== PAINEL: LOCALIZADOS ==================== -->
         <article class="panel" id="panel-localizados">
             <h2>✅ Itens Localizados (com UORG Destino)</h2>
-            
+
             <div class="actions">
                 <button class="btn btn-success" onclick="exportarCSV('localizados')">
                     📥 Exportar CSV
                 </button>
             </div>
-            
+
             <div class="search-box">
-                <input type="text" 
-                       id="busca-localizados" 
-                       placeholder="🔍 Buscar por patrimônio ou descrição...">
+                <input type="text" id="busca-localizados" placeholder="🔍 Buscar por patrimônio ou descrição...">
             </div>
-            
+
             <div class="table-container" style="max-height: 500px; overflow-y: auto;" data-tabela="localizados">
                 <table>
                     <thead>
@@ -383,7 +378,8 @@ Exemplo:
                             <th data-coluna="uorg_destino" onclick="App.ordenarTabela('localizados', 'uorg_destino')">
                                 UORG Destino <span class="sort-icon">↕</span>
                             </th>
-                            <th data-coluna="coordenacao_destino" onclick="App.ordenarTabela('localizados', 'coordenacao_destino')">
+                            <th data-coluna="coordenacao_destino"
+                                onclick="App.ordenarTabela('localizados', 'coordenacao_destino')">
                                 Coord. Destino <span class="sort-icon">↕</span>
                             </th>
                             <th data-coluna="localidade" onclick="App.ordenarTabela('localizados', 'localidade')">
@@ -399,19 +395,17 @@ Exemplo:
         <!-- ==================== PAINEL: PENDENTES ==================== -->
         <article class="panel" id="panel-pendentes">
             <h2>⏳ Itens Pendentes (sem UORG Destino)</h2>
-            
+
             <div class="actions">
                 <button class="btn btn-success" onclick="exportarCSV('pendentes')">
                     📥 Exportar CSV
                 </button>
             </div>
-            
+
             <div class="search-box">
-                <input type="text" 
-                       id="busca-pendentes" 
-                       placeholder="🔍 Buscar por patrimônio ou descrição...">
+                <input type="text" id="busca-pendentes" placeholder="🔍 Buscar por patrimônio ou descrição...">
             </div>
-            
+
             <div class="table-container" style="max-height: 500px; overflow-y: auto;" data-tabela="pendentes">
                 <table>
                     <thead>
@@ -425,7 +419,8 @@ Exemplo:
                             <th data-coluna="categoria" onclick="App.ordenarTabela('pendentes', 'categoria')">
                                 Categoria <span class="sort-icon">↕</span>
                             </th>
-                            <th data-coluna="coordenacao_destino" onclick="App.ordenarTabela('pendentes', 'coordenacao_destino')">
+                            <th data-coluna="coordenacao_destino"
+                                onclick="App.ordenarTabela('pendentes', 'coordenacao_destino')">
                                 Coord. Destino <span class="sort-icon">↕</span>
                             </th>
                             <th>Status Bipagem</th>
@@ -439,40 +434,43 @@ Exemplo:
         <!-- ==================== PAINEL: BIPADOS ==================== -->
         <article class="panel" id="panel-bipados">
             <h2>📋 Itens Bipados (verificados pelo scanner)</h2>
-            
+
             <div class="actions">
                 <button class="btn btn-success" onclick="exportarCSV('bipados')">
                     📥 Exportar CSV
                 </button>
             </div>
-            
+
             <div class="search-box">
-                <input type="text" 
-                       id="busca-bipados" 
-                       placeholder="🔍 Buscar por patrimônio ou descrição...">
+                <input type="text" id="busca-bipados" placeholder="🔍 Buscar por patrimônio ou descrição...">
             </div>
-            
+
             <div class="table-container" style="max-height: 500px; overflow-y: auto;" data-tabela="bipados">
                 <table>
                     <thead>
                         <tr>
                             <th data-coluna="patrimonio" onclick="App.ordenarTabela('bipados', 'patrimonio')">
-                                Patrimônio <span class="sort-icon">↕</span>
+                                Patrimônio <span class="sort-icon"></span>
                             </th>
                             <th data-coluna="descricao" onclick="App.ordenarTabela('bipados', 'descricao')">
-                                Descrição <span class="sort-icon">↕</span>
+                                Descrição <span class="sort-icon"></span>
                             </th>
                             <th data-coluna="uorg_destino" onclick="App.ordenarTabela('bipados', 'uorg_destino')">
-                                UORG Destino <span class="sort-icon">↕</span>
+                                UORG Destino <span class="sort-icon"></span>
                             </th>
-                            <th data-coluna="coordenacao_destino" onclick="App.ordenarTabela('bipados', 'coordenacao_destino')">
-                                Coord. Destino <span class="sort-icon">↕</span>
+                            <th data-coluna="coordenacao_destino"
+                                onclick="App.ordenarTabela('bipados', 'coordenacao_destino')">
+                                Coord. Destino <span class="sort-icon"></span>
                             </th>
                             <th data-coluna="data_bipagem" onclick="App.ordenarTabela('bipados', 'data_bipagem')">
-                                Data/Hora Bipagem <span class="sort-icon">↕</span>
+                                Data/Hora Bipagem <span class="sort-icon"></span>
+                            </th>
+                            <th data-coluna="observacao">
+                                Observação
                             </th>
                         </tr>
                     </thead>
+
                     <tbody id="tabela-bipados"></tbody>
                 </table>
             </div>
@@ -527,7 +525,7 @@ Exemplo:
         <!-- ==================== PAINEL: CONFIGURAÇÕES ==================== -->
         <article class="panel" id="panel-config">
             <h2>⚙️ Configurações</h2>
-            
+
             <!-- Exportar Relatórios -->
             <section class="config-section">
                 <h3>📥 Exportar Relatórios</h3>
@@ -598,4 +596,5 @@ Exemplo:
     <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
 </body>
+
 </html>

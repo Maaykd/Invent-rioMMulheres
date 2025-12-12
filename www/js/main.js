@@ -13,7 +13,7 @@
     }
 })();
 
-const App = (function() {
+const App = (function () {
     'use strict';
 
     // Estado da aplicação
@@ -156,7 +156,7 @@ const App = (function() {
         if (modo !== 'camera') {
             Camera.parar();
         }
-        
+
         // Foca no input correto
         if (modo === 'manual') {
             const input = document.getElementById('input-patrimonio');
@@ -189,6 +189,7 @@ const App = (function() {
      * Processa leitura (manual ou câmera)
      */
     function _processarLeitura(patrimonio) {
+
         if (!Utils.validarPatrimonio(patrimonio)) {
             UI.toast('Patrimônio inválido', 'error');
             return;
@@ -216,13 +217,14 @@ const App = (function() {
         // Mostra resultado visual
         UI.mostrarResultado(resultado);
 
-        // Adiciona ao histórico
+        // Registra no histórico (sem abrir caixinha de observação aqui)
         Inventario.adicionarHistorico(resultado);
 
         // Atualiza UI
         UI.atualizarEstatisticas();
         UI.renderizarHistorico();
     }
+
 
     /**
      * Inicia câmera do scanner
@@ -337,21 +339,21 @@ const App = (function() {
 
         // Monta detalhes
         let html = '';
-        
+
         if (detalhes.naoEncontrado.length > 0) {
             html += `<div class="detalhe-grupo erro">
                 <strong>❌ Não encontrados (${detalhes.naoEncontrado.length}):</strong>
                 <div class="lista-patrimonios">${detalhes.naoEncontrado.join(', ')}</div>
             </div>`;
         }
-        
+
         if (detalhes.jaBipado.length > 0) {
             html += `<div class="detalhe-grupo alerta">
                 <strong>⚠️ Já bipados (${detalhes.jaBipado.length}):</strong>
                 <div class="lista-patrimonios">${detalhes.jaBipado.join(', ')}</div>
             </div>`;
         }
-        
+
         if (detalhes.sucesso.length > 0) {
             html += `<div class="detalhe-grupo sucesso">
                 <strong>✅ Registrados (${detalhes.sucesso.length}):</strong>
@@ -406,7 +408,7 @@ const App = (function() {
         area.addEventListener('drop', (e) => {
             e.preventDefault();
             area.classList.remove('dragover');
-            
+
             const arquivos = e.dataTransfer.files;
             if (arquivos.length > 0) {
                 _processarUpload(arquivos[0]);
@@ -426,7 +428,7 @@ const App = (function() {
      */
     async function _processarUpload(arquivo) {
         const statusEl = document.getElementById('import-status');
-        
+
         try {
             if (statusEl) {
                 statusEl.innerHTML = '<div class="info-box">⏳ Processando arquivo...</div>';
@@ -465,7 +467,7 @@ const App = (function() {
 
         } catch (e) {
             console.error('[App] Erro no upload:', e);
-            
+
             if (statusEl) {
                 statusEl.innerHTML = `
                     <div class="info-box" style="background: #f8d7da; border-color: #dc3545;">
@@ -571,11 +573,11 @@ const App = (function() {
     function exportarBackup() {
         const backup = Storage.exportarBackup();
         const json = JSON.stringify(backup, null, 2);
-        
+
         const blob = new Blob([json], { type: 'application/json' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `backup_inventario_${new Date().toISOString().slice(0,10)}.json`;
+        link.download = `backup_inventario_${new Date().toISOString().slice(0, 10)}.json`;
         link.click();
 
         UI.toast('Backup exportado!', 'success');
@@ -591,7 +593,7 @@ const App = (function() {
         try {
             const texto = await arquivo.text();
             const backup = JSON.parse(texto);
-            
+
             const resultado = Storage.importarBackup(backup);
 
             if (resultado.sucesso) {
@@ -635,7 +637,7 @@ const App = (function() {
      */
     async function limparBipagens() {
         const stats = Inventario.obterEstatisticas();
-        
+
         if (stats.bipados === 0) {
             UI.toast('Não há bipagens para limpar', 'warning');
             return;
@@ -711,26 +713,26 @@ const App = (function() {
         verificarPatrimonio,
         iniciarCamera,
         pararCamera,
-        
+
         // Lote
         processarLote,
         limparLote,
-        
+
         // Exportação
         exportarCSV,
         exportarPorCoordenacao,
-        
+
         // Backup
         exportarBackup,
         importarBackup,
-        
+
         // Limpeza
         limparBipagens,
         limparTudo,
-        
+
         // Ordenação
         ordenarTabela,
-        
+
         // Câmera (delegação)
         ajustarZoom: (v) => Camera.ajustarZoom(v),
         toggleFlash: () => Camera.toggleFlash(),
@@ -742,21 +744,21 @@ const App = (function() {
 window.App = App;
 
 // Aliases para compatibilidade com onclick no HTML
-window.setMode = function(modo) { App.setModoScanner(modo); };
-window.verificarPatrimonio = function() { App.verificarPatrimonio(); };
-window.iniciarCamera = function() { App.iniciarCamera(); };
-window.pararCamera = function() { App.pararCamera(); };
-window.processarLote = function() { App.processarLote(); };
-window.limparLote = function() { App.limparLote(); };
-window.exportarCSV = function(tipo) { App.exportarCSV(tipo); };
-window.exportarPorCoordenacao = function() { App.exportarPorCoordenacao(); };
-window.exportarBackup = function() { App.exportarBackup(); };
-window.importarBackup = function() { App.importarBackup(); };
-window.limparBipagens = function() { App.limparBipagens(); };
-window.limparTudo = function() { App.limparTudo(); };
-window.ajustarZoom = function(v) { App.ajustarZoom(v); };
-window.toggleFlash = function() { App.toggleFlash(); };
-window.setOverlaySize = function(t) { App.setTamanhoArea(t); };
+window.setMode = function (modo) { App.setModoScanner(modo); };
+window.verificarPatrimonio = function () { App.verificarPatrimonio(); };
+window.iniciarCamera = function () { App.iniciarCamera(); };
+window.pararCamera = function () { App.pararCamera(); };
+window.processarLote = function () { App.processarLote(); };
+window.limparLote = function () { App.limparLote(); };
+window.exportarCSV = function (tipo) { App.exportarCSV(tipo); };
+window.exportarPorCoordenacao = function () { App.exportarPorCoordenacao(); };
+window.exportarBackup = function () { App.exportarBackup(); };
+window.importarBackup = function () { App.importarBackup(); };
+window.limparBipagens = function () { App.limparBipagens(); };
+window.limparTudo = function () { App.limparTudo(); };
+window.ajustarZoom = function (v) { App.ajustarZoom(v); };
+window.toggleFlash = function () { App.toggleFlash(); };
+window.setOverlaySize = function (t) { App.setTamanhoArea(t); };
 
 // ==================== MENU HAMBÚRGUER ====================
 
@@ -795,25 +797,25 @@ function fecharMenu() {
  */
 function _atualizarMenuStats() {
     const stats = Inventario.obterEstatisticas();
-    
+
     // Menu stats
     const menuTotal = document.getElementById('menu-stat-total');
     const menuLocalizados = document.getElementById('menu-stat-localizados');
     const menuPendentes = document.getElementById('menu-stat-pendentes');
-    
+
     if (menuTotal) menuTotal.textContent = stats.total;
     if (menuLocalizados) menuLocalizados.textContent = stats.localizados;
     if (menuPendentes) menuPendentes.textContent = stats.pendentes;
-    
+
     // Menu badges
     const badgeLocalizados = document.getElementById('menu-badge-localizados');
     const badgePendentes = document.getElementById('menu-badge-pendentes');
     const badgeBipados = document.getElementById('menu-badge-bipados');
-    
+
     if (badgeLocalizados) badgeLocalizados.textContent = stats.localizados;
     if (badgePendentes) badgePendentes.textContent = stats.pendentes;
     if (badgeBipados) badgeBipados.textContent = stats.bipados;
-    
+
     // Mini stat no header
     const miniStat = document.getElementById('mini-stat-total');
     if (miniStat) miniStat.textContent = stats.total;
@@ -845,7 +847,7 @@ function navegarPara(aba) {
     document.querySelectorAll('.panel').forEach(panel => {
         panel.classList.remove('active');
     });
-    
+
     const painel = document.getElementById(`panel-${aba}`);
     if (painel) {
         painel.classList.add('active');
@@ -875,7 +877,7 @@ function navegarPara(aba) {
 
     // Scroll para o topo
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
+
     // Atualiza stats do menu
     _atualizarMenuStats();
 }
