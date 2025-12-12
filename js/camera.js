@@ -3,7 +3,7 @@
  * OTIMIZADO PARA PATRIMÔNIO (Códigos pequenos de 7 dígitos)
  */
 
-const Camera = (function() {
+const Camera = (function () {
     'use strict';
 
     // Estado interno
@@ -56,7 +56,7 @@ const Camera = (function() {
             locator: {
                 // "medium" é OBRIGATÓRIO para etiquetas de patrimônio padrão.
                 // Se as etiquetas forem muito pequenas (tipo joia), mude para "small".
-                patchSize: "medium", 
+                patchSize: "medium",
                 halfSample: true // Melhora performance em celulares
             },
             numOfWorkers: navigator.hardwareConcurrency || 2,
@@ -88,7 +88,7 @@ const Camera = (function() {
 
         // Visualização Debug (Caixas verdes)
         // Isso ajuda você a ver se a câmera está "focando" nas barras
-        Quagga.onProcessed(function(result) {
+        Quagga.onProcessed(function (result) {
             var drawingCtx = Quagga.canvas.ctx.overlay,
                 drawingCanvas = Quagga.canvas.dom.overlay;
 
@@ -98,11 +98,11 @@ const Camera = (function() {
                     result.boxes.filter(function (box) {
                         return box !== result.box;
                     }).forEach(function (box) {
-                        Quagga.ImageDebug.drawPath(box, {x: 0, y: 1}, drawingCtx, {color: "green", lineWidth: 2});
+                        Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, drawingCtx, { color: "green", lineWidth: 2 });
                     });
                 }
                 if (result.box) {
-                    Quagga.ImageDebug.drawPath(result.box, {x: 0, y: 1}, drawingCtx, {color: "#00F", lineWidth: 2});
+                    Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, drawingCtx, { color: "#00F", lineWidth: 2 });
                 }
             }
         });
@@ -120,24 +120,23 @@ const Camera = (function() {
 
     function _onDeteccao(result) {
         _deteccaoCount++;
-        
-        // Filtro de confiança e validação
-        if (!result || !result.codeResult || result.codeResult.confidence < 0.6) return;
+
+        // 1) Precisa ter resultado, código e confiança boa
+        if (!result || !result.codeResult || result.codeResult.confidence < 0.75) return;
 
         const codigo = result.codeResult.code;
-        
-        // FILTRO EXTRA: Se seus patrimônios tem SEMPRE 7 dígitos:
-        // Descomente a linha abaixo para ignorar qualquer leitura errada
-        // if (codigo.length !== 7) return;
+
+        // 2) Só aceita números
+        if (!codigo || !/^[0-9]+$/.test(codigo)) return;
+
+        // 3) Só aceita se tiver 7 ou 8 dígitos
+        if (codigo.length !== 7 && codigo.length !== 8) return;
 
         const agora = Date.now();
 
-        // Debounce de 1.5s
+        // 4) Debounce: evita repetição louca do mesmo código
         if (codigo && (codigo !== _ultimoCodigo || agora - _ultimaLeitura > 1500)) {
-            
-            // Tocar um som de "bip" ajuda a saber que leu
             _tocarBip();
-
             _ultimoCodigo = codigo;
             _ultimaLeitura = agora;
 
@@ -147,6 +146,7 @@ const Camera = (function() {
             if (_onCodigoLido) _onCodigoLido(codigo);
         }
     }
+
 
     // Função auxiliar para feedback sonoro (opcional)
     function _tocarBip() {
@@ -165,7 +165,7 @@ const Camera = (function() {
                 gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.1);
                 setTimeout(() => { osc.stop(); ctx.close(); }, 100);
             }
-        } catch(e) {}
+        } catch (e) { }
     }
 
     function _configurarControlesAvancados() {
@@ -194,12 +194,12 @@ const Camera = (function() {
             if (btnFlash) {
                 btnFlash.style.display = capabilities.torch ? 'inline-flex' : 'none';
             }
-            
+
             // Força foco contínuo se disponível
             if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
-                _track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+                _track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => { });
             }
-            
+
             const advancedControls = document.getElementById('camera-advanced');
             if (advancedControls) advancedControls.style.display = 'block';
 
@@ -210,7 +210,7 @@ const Camera = (function() {
 
     function parar() {
         if (_flashAtivo && _track) {
-            _track.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+            _track.applyConstraints({ advanced: [{ torch: false }] }).catch(() => { });
             _flashAtivo = false;
         }
 
@@ -225,10 +225,10 @@ const Camera = (function() {
         _stream = null;
         _track = null;
         _atualizarBotoes(false);
-        
+
         const preview = document.getElementById('camera-preview');
         if (preview) preview.innerHTML = '';
-        
+
         const advancedControls = document.getElementById('camera-advanced');
         if (advancedControls) advancedControls.style.display = 'none';
 
@@ -245,7 +245,7 @@ const Camera = (function() {
         if (display) display.textContent = zoomValue.toFixed(1) + 'x';
 
         if (_track && _zoomCapabilities && _zoomCapabilities.zoom) {
-            _track.applyConstraints({ advanced: [{ zoom: zoomValue }] }).catch(() => {});
+            _track.applyConstraints({ advanced: [{ zoom: zoomValue }] }).catch(() => { });
         }
     }
 
